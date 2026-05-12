@@ -7,7 +7,6 @@ on:
       - release/**
 
 env:
-  # Node.js 24 へ先行対応（Node.js 20 非推奨対策）
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -28,7 +27,12 @@ jobs:
         with:
           vs-version: '17.0'
 
-      - name: Restore
+      # ★ 追加：packages.config 用
+      - name: NuGet Restore
+        run: nuget restore SampleCSharpUI.sln
+
+      # 念のため残してもOK（SDK-style project 用）
+      - name: dotnet Restore
         run: dotnet restore SampleCSharpUI.sln
 
       - name: Build (Release)

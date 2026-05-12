@@ -1,0 +1,51 @@
+name: Release - Build and Upload ZIP
+
+on:
+  push:
+    tags:
+      - 'v*'   # v1.3.0.0 など
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  release:
+    runs-on: windows-2025-vs2026
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+        with:
+          vs-version: '17.0'
+
+      # packages.config 対応
+      - name: NuGet Restore
+        run: nuget restore SampleCSharpUI.sln
+
+      - name: Build (Release)
+        run: msbuild SampleCSharpUI.sln `
+              /p:Configuration=Release `
+              /p:Platform="Any CPU" `
+              /t:Build
+
+      # ZIP 作成
+      - name: Create ZIP
+        run: |
+          mkdir release
+          Compress-Archive `
+            -Path SampleCSharpUI/bin/Release/* `
+            -DestinationPath release/SampleCSharpUI-${{ github.ref_name }}.zip
+
+      # GitHub Release 作成
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/SampleCSharpUI-${{ github.ref_name }}.zip

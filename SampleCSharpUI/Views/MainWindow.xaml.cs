@@ -14,6 +14,7 @@ namespace SampleCSharpUI.Views
         private SynchronizationContext Context { get; set; } = SynchronizationContext.Current;
 
         public ViewModels.MainViewModel ViewModel { get; } = App.MainVM;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -123,7 +124,6 @@ namespace SampleCSharpUI.Views
 
                         case "Save":
                             {
-                                // ファイル保存ダイアログを開いて、選択されたパスを ViewModel 経由で保存処理に渡す
                                 var dlg = new Microsoft.Win32.SaveFileDialog()
                                 {
                                     Filter = Properties.Resources.SaveFilter,
@@ -180,6 +180,11 @@ namespace SampleCSharpUI.Views
                         }
                     }
                 }
+                else if (e.PropertyName == "SelectedChatRoom")
+                {
+                    this.ViewModel.AttachedFileName = string.Empty;
+                    this.ViewModel.AttachedFilePath = string.Empty;
+                }
             };
         }
 
@@ -193,6 +198,42 @@ namespace SampleCSharpUI.Views
             };
             this.IsEnabled = false;
             target.Show();
+        }
+
+        // --- 添付関連の公開メソッド（XAML の CallMethodAction から呼び出す） ---
+        public void OpenAttachFile()
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog()
+            {
+                Title = Properties.Resources.AttachFile,
+                // 画像ファイルのみ許可（png, jpeg, jpg, gif, webp）
+                Filter = Properties.Resources.AttachFileFilter,
+                Multiselect = false
+            };
+
+            var result = dlg.ShowDialog(this);
+            if (result == true)
+            {
+                // 追加の安全チェック: 拡張子を厳密に確認する（大文字小文字を無視）
+                var ext = System.IO.Path.GetExtension(dlg.FileName) ?? string.Empty;
+                ext = ext.ToLowerInvariant();
+                if (ext == ".png" || ext == ".jpeg" || ext == ".jpg" || ext == ".gif" || ext == ".webp")
+                {
+                    // ViewModel 側のプロパティへ設定
+                    this.ViewModel.AttachedFilePath = dlg.FileName;
+                    this.ViewModel.AttachedFileName = string.IsNullOrEmpty(dlg.FileName) ? null : System.IO.Path.GetFileName(dlg.FileName);
+                }
+                else
+                {
+                    MessageBox.Show(this, Properties.Resources.InvalidFileType, this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+        }
+
+        public void RemoveAttachedFile()
+        {
+            this.ViewModel.AttachedFilePath = null;
+            this.ViewModel.AttachedFileName = null;
         }
     }
 }

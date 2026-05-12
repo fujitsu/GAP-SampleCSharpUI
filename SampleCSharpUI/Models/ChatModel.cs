@@ -8,6 +8,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Policy;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -175,8 +176,8 @@ namespace SampleCSharpUI.Models
         }
 
         #region "チャット関連"
-        public ObservableCollection<Models.TDataChatRoom> ChatRooms = new ObservableCollection<Models.TDataChatRoom>();
-        public ObservableCollection<TMessage> Messages = new ObservableCollection<TMessage>();
+        public ObservableCollection<Models.TDataChatRoom> ChatRooms { get; set; } = new ObservableCollection<Models.TDataChatRoom>();
+        public ObservableCollection<TMessage> Messages { get; set; } = new ObservableCollection<TMessage>();
 
         private Models.TDataChatRoom _SelectedChatRoom = null;
         public Models.TDataChatRoom SelectedChatRoom
@@ -226,15 +227,16 @@ namespace SampleCSharpUI.Models
             {
                 var ser = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(List<APIData.TChat>));
                 {
-                    var result = ser.ReadObject(json) as List<APIData.TChat>;
-                    foreach (var chat in result)
+                    var results = ser.ReadObject(json) as List<APIData.TChat>;
+                    foreach (var item in results?.OrderByDescending((x) => x.created_date))
                     {
                         var chatRoom = new Models.TDataChatRoom()
                         {
-                            ID = chat.id,
-                            Name = chat.name,
-                            ChatTemplateId = chat.chat_template_id,
-                            RetrieverIDs = chat.retriever_ids,
+                            ID = item.id,
+                            Name = item.name,
+                            ChatTemplateId = item.chat_template_id,
+                            RetrieverIDs = item.retriever_ids,
+                            CreateDateTime = DateTimeOffset.FromUnixTimeMilliseconds(item.created_date).ToLocalTime().DateTime,
                         };
                         this.ChatRooms.Add(chatRoom);
                     }
@@ -455,10 +457,17 @@ namespace SampleCSharpUI.Models
                             {
                                 // 質問のメッセージ追加
                                 var item = ser.ReadObject(json) as APIData.TChatMessage;
-                                this.SetMessage(item.role,
-                                    item.content,
-                                    DateTimeOffset.FromUnixTimeMilliseconds(item.timeunix).ToLocalTime().DateTime,
-                                    item.ref_chunks is null ? new List<string>() : item.ref_chunks?.Select((x) => x.text.Replace("\n\n", "\n")).ToList());
+                                if (item?.role != null)
+                                {
+                                    this.SetMessage(item.role,
+                                        item.content,
+                                        DateTimeOffset.FromUnixTimeMilliseconds(item.timeunix).ToLocalTime().DateTime,
+                                        item.ref_chunks is null ? new List<string>() : item.ref_chunks?.Select((x) => x.text.Replace("\n\n", "\n")).ToList());
+                                }
+                                else
+                                {
+                                    throw new Exception(jsonString);
+                                }
                             }
                             json.Close();
 
@@ -531,10 +540,17 @@ namespace SampleCSharpUI.Models
                             {
                                 // 質問のメッセージ追加
                                 var item = ser.ReadObject(json) as APIData.TChatMessage;
-                                this.SetMessage(item.role,
-                                    item.content,
-                                    DateTimeOffset.FromUnixTimeMilliseconds(item.timeunix).ToLocalTime().DateTime,
-                                    item.ref_chunks is null ? new List<string>() : item.ref_chunks?.Select((x) => x.text.Replace("\n\n", "\n")).ToList());
+                                if (item?.role != null)
+                                {
+                                    this.SetMessage(item.role,
+                                        item.content,
+                                        DateTimeOffset.FromUnixTimeMilliseconds(item.timeunix).ToLocalTime().DateTime,
+                                        item.ref_chunks is null ? new List<string>() : item.ref_chunks?.Select((x) => x.text.Replace("\n\n", "\n")).ToList());
+                                }
+                                else
+                                {
+                                    throw new Exception(jsonString);
+                                }
                             }
                             json.Close();
 
@@ -610,7 +626,8 @@ namespace SampleCSharpUI.Models
                                     }
                                     OnPropertyChanged("Messages_Item");
                                 }
-                                catch {
+                                catch
+                                {
                                     this.IsStreaming = false;
                                     // エラー発生時はAI回答欄を削除する。
                                     this.Messages.Remove(this.Messages.Where((x) => x.Id == msgId).FirstOrDefault());
@@ -645,10 +662,11 @@ namespace SampleCSharpUI.Models
                     var result = ser.ReadObject(json) as APIData.TChat;
                     var item = result.messages.Where((x) => x.role == "ai").LastOrDefault();
                     var lastItem = this.Messages.Where((x) => x.Role == "ai").LastOrDefault();
-                    if (lastItem != null) {
+                    if (lastItem != null && !string.IsNullOrEmpty(lastItem.Content))
+                    {
                         SetMessage(lastItem.Id,
-                            item.role, item.content, 
-                            DateTimeOffset.FromUnixTimeMilliseconds(item.timeunix).ToLocalTime().DateTime, 
+                            item.role, item.content,
+                            DateTimeOffset.FromUnixTimeMilliseconds(item.timeunix).ToLocalTime().DateTime,
                             item.ref_chunks is null ? new List<string>() : item.ref_chunks?.Select((x) => x.text.Replace("\n\n", "\n")).ToList());
                     }
 
@@ -698,7 +716,14 @@ namespace SampleCSharpUI.Models
                                 {
                                     // 回答のメッセージ追加
                                     var item = ser.ReadObject(json) as APIData.TNonRoomResponse;
-                                    this.SetMessage(msgId, "ai", item.answer, DateTime.UtcNow.ToLocalTime(), new List<string>());
+                                    if (item?.answer != null)
+                                    {
+                                        this.SetMessage(msgId, "ai", item.answer, DateTime.UtcNow.ToLocalTime(), new List<string>());
+                                    }
+                                    else
+                                    {
+                                        throw new Exception(jsonString);
+                                    }
                                 }
                                 json.Close();
 
@@ -742,15 +767,39 @@ namespace SampleCSharpUI.Models
             }
         }
 
+        // 履歴設定(チャットルームなし)
+        private APIData.TCohereV2ChatMessage[] SetCohereV2ChatHistories(List<TMessage> histories)
+        {
+            if (histories == null || histories.Count == 0)
+            {
+                return new APIData.TCohereV2ChatMessage[] { };
+            }
+            else
+            {
+                var messages = new APIData.TCohereV2ChatMessage[histories.Count];
+                for (int i = 0; i < histories.Count; i++)
+                {
+                    var history = histories[i];
+                    messages[i] = new APIData.TCohereV2ChatMessage()
+                    {
+                        role = history.Role == "ai" ? "assistant" : "user",
+                        content = new APIData.TContent[] { new APIData.TContent() { type = "text", text = history.Content } },
+                    };
+                }
+                return messages;
+            }
+        }
+
         // メッセージ追加(チャットルームなし)
-        private Guid SetMessage(string role, string content, DateTime time, List<string> refs)
+        private Guid SetMessage(string role, string content, DateTime time, List<string> refs, string image = null)
         {
             var msg = new TMessage()
             {
                 Role = role,
                 Content = content,
                 Time = time,
-                Refs = refs
+                Refs = refs,
+                Image = image
             };
             msg.PropertyChanged += (s, e) => { OnPropertyChanged("Messages_Item"); };
             this.Messages.Add(msg);
@@ -777,6 +826,103 @@ namespace SampleCSharpUI.Models
                 return SetMessage(role, content, time, refs);
             }
         }
+
+
+        /// <summary>
+        /// プロンプト入力(チャットルームなし/マルチモーダル)
+        /// </summary>
+        /// <param name="inputText">入力</param>
+        internal async Task SendMessageWithFileAsync(List<TMessage> histories, float temperature, int token, string inputText, string filePath)
+        {
+            var content = inputText ?? string.Empty;
+            var base64ImageData = !string.IsNullOrEmpty(filePath) ? await Base64Helper.ImageFileToBase64Async(filePath) : string.Empty;
+            if (!string.IsNullOrWhiteSpace(content))
+            {
+                var body = new APIData.TCohereV2ChatRequest()
+                {
+                    model = "takane",
+                    messages = this.SetCohereV2ChatHistories(histories),
+                    temperature = temperature,
+                    max_tokens = (uint)token,
+                };
+
+                // ここで配列の末尾に要素を追加する（body.messages が配列であることを前提）
+                var existing = body.messages ?? new APIData.TCohereV2ChatMessage[] { };
+                var newArr = new APIData.TCohereV2ChatMessage[existing.Length + 1];
+                if (existing.Length > 0)
+                {
+                    Array.Copy(existing, newArr, existing.Length);
+                }
+                if (!string.IsNullOrEmpty(base64ImageData))
+                {
+                    newArr[newArr.Length - 1] = new APIData.TCohereV2ChatMessage()
+                    {
+                        role = "user",
+                        content = new APIData.TContent[] {
+                            new APIData.TContent() { type = "text", text = inputText },
+                            new APIData.TContent() { type = "image_url", image_url = new APIData.TImageUrl() { url= $"data:image/png;base64,{base64ImageData}" } }
+                        },
+                    };
+                }
+                else
+                {
+                    newArr[newArr.Length - 1] = new APIData.TCohereV2ChatMessage()
+                    {
+                        role = "user",
+                        content = new APIData.TContent[] {
+                            new APIData.TContent() { type = "text", text = inputText },
+                        },
+                    };
+                }
+                body.messages = newArr;
+
+                // 質問のメッセージ追加
+                this.SetMessage("user", content, DateTime.UtcNow.ToLocalTime(), new List<string>(), filePath);
+
+                // ここで body を JSON 文字列にシリアライズして変数に格納する
+                using (var ms = new MemoryStream())
+                {
+                    var msgId = this.SetMessage("ai", Resources.Streaming, DateTime.UtcNow.ToLocalTime(), new List<string>());
+                    OnPropertyChanged("Messages_Item");
+                    var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(APIData.TCohereV2ChatRequest));
+                    {
+                        serializer.WriteObject(ms, body);
+                        try
+                        {
+                            var bodyJsonString = Encoding.UTF8.GetString(ms.ToArray());
+                            var jsonString = await HttpHelper.PostRequestAsync($"/api/v1/pass-through/takane/v2/chat", this.IdToken, bodyJsonString);
+                            using (var json = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(jsonString)))
+                            {
+                                var ser = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(APIData.TCohereV2ChatResponse));
+                                {
+                                    // 回答のメッセージ追加
+                                    var item = ser.ReadObject(json) as APIData.TCohereV2ChatResponse;
+                                    if (item?.id != null)
+                                    {
+                                        this.SetMessage(msgId, "ai", item.message.content[0].text, DateTime.UtcNow.ToLocalTime(), new List<string>());
+                                    }
+                                    else
+                                    {
+                                        throw new Exception(jsonString);
+                                    }
+                                }
+                                json.Close();
+
+                                // 最新行表示
+                                OnPropertyChanged("Messages_Item");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // エラー発生時はAI回答欄を削除し、exceptionを投げる
+                            this.Messages.Remove(this.Messages.Where((x) => x.Id == msgId).FirstOrDefault());
+                            throw ex;
+                        }
+                    }
+                }
+            }
+        }
+
 
         /// <summary>
         /// 最新の入力プロンプトまでを削除する（AIからの回答がある場合は、その回答まで削除する
@@ -878,6 +1024,7 @@ namespace SampleCSharpUI.Models
         public string Name { get; set; } = string.Empty;
         public string ChatTemplateId { get; set; } = string.Empty;
         public string[] RetrieverIDs { get; set; } = null;
+        public DateTime CreateDateTime { get; set; } = DateTime.Now;
     }
 
     /// <summary>
@@ -889,5 +1036,6 @@ namespace SampleCSharpUI.Models
         public string Name { get; set; } = string.Empty;
         public string EmbeddingModel { get; set; } = string.Empty;
         public string[] OriginIDs { get; set; } = null;
+        public DateTime CreateDateTime { get; set; } = DateTime.Now;
     }
 }

@@ -79,6 +79,33 @@ namespace SampleCSharpUI.Properties {
         }
         
         /// <summary>
+        ///   ＋ に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Attach {
+            get {
+                return ResourceManager.GetString("Attach", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   ファイルを添付 に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string AttachFile {
+            get {
+                return ResourceManager.GetString("AttachFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   画像ファイル (*.png;*.jpeg;*.jpg;*.gif;*.webp)|*.png;*.jpeg;*.jpg;*.gif;*.webp に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string AttachFileFilter {
+            get {
+                return ResourceManager.GetString("AttachFileFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   認証方式 に類似しているローカライズされた文字列を検索します。
         /// </summary>
         public static string AuthenticationType {
@@ -187,6 +214,24 @@ namespace SampleCSharpUI.Properties {
         }
         
         /// <summary>
+        ///   ー に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Detach {
+            get {
+                return ResourceManager.GetString("Detach", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   添付を削除 に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string DetachFile {
+            get {
+                return ResourceManager.GetString("DetachFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   参照ドキュメント表示 に類似しているローカライズされた文字列を検索します。
         /// </summary>
         public static string DisplayReference {
@@ -246,6 +291,15 @@ namespace SampleCSharpUI.Properties {
         public static string HistoryTokenBudget {
             get {
                 return ResourceManager.GetString("HistoryTokenBudget", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   選択されたファイルはサポートされていない形式です。 に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string InvalidFileType {
+            get {
+                return ResourceManager.GetString("InvalidFileType", resourceCulture);
             }
         }
         

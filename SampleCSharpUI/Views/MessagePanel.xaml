@@ -13,6 +13,7 @@
     <UserControl.Resources>
         <converter:RoleToHorizontalAlignmentConverter x:Key="RoleToHorizontalAlignmentConverter"/>
         <converter:Boolean2VisibilityConverter x:Key="Boolean2VisibilityConverter"/>
+        <converter:Null2CollapsedConverter x:Key="Null2CollapsedConverter"/>
         <converter:WidthPercentageConverter x:Key="WidthPercentageConverter"/>
         <!--<converter:MarkdownToFlowDocumentConverter x:Key="MarkdownToFlowDocumentConverter"/>-->
     </UserControl.Resources>
@@ -47,6 +48,10 @@
                         <StackPanel Orientation="Vertical" Background="Transparent">
                             <!--<FlowDocumentScrollViewer Document="{Binding Content, Converter={StaticResource MarkdownToFlowDocumentConverter}}" BorderThickness="0" Background="Transparent"  />-->
                             <TextBox Text="{Binding Content, Mode=OneWay}" TextWrapping="Wrap" IsReadOnly="True" BorderThickness="0" Background="Transparent" />
+                            <!--<TextBox Text="{Binding Image, Mode=OneWay}" TextWrapping="Wrap" IsReadOnly="True" BorderThickness="0" Background="Transparent" Visibility="{Binding Image,Converter={StaticResource Null2CollapsedConverter}}" />-->
+                            <Image Source="{Binding Image}" HorizontalAlignment="Left"
+                                   MaxWidth="50" MaxHeight="50" Stretch="Uniform"  StretchDirection="Both"
+                                   Visibility="{Binding Image,Converter={StaticResource Null2CollapsedConverter}}" />
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                 <TextBlock Padding="0" Opacity="0.6" Text="{Binding Time, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}" />
                                 <Button Margin="4,0,4,0" ToolTip="{x:Static prop:Resources.DisplayReference}" Background="Gray">

@@ -147,8 +147,16 @@ namespace SampleCSharpUI.Commons
                     // リクエスト送信とレスポンス受信
                     using (var response = await SendClient.SendAsync(request))
                     {
-                        response.EnsureSuccessStatusCode();
-                        answer = await response.Content.ReadAsStringAsync();
+                        if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                        {
+                            answer = await response.Content.ReadAsStringAsync();
+
+                        }
+                        else
+                        {
+                            response.EnsureSuccessStatusCode();
+                            answer = await response.Content.ReadAsStringAsync();
+                        }
                     }
                 }
             }

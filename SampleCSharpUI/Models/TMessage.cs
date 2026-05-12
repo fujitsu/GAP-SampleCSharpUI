@@ -76,6 +76,23 @@ namespace SampleCSharpUI.Models
             }
         }
 
+        /// <summary>
+        /// 添付イメージファイル名
+        /// </summary>
+        private string _Image { get; set; } = string.Empty;
+        public string Image
+        {
+            get { return _Image; }
+            internal set
+            {
+                if (_Image != value)
+                {
+                    _Image = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         // プロパティが変更されたときに通知するイベント
         public event PropertyChangedEventHandler PropertyChanged;
 

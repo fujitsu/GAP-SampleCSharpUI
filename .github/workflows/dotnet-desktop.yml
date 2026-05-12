@@ -29,10 +29,10 @@ jobs:
           vs-version: '17.0'
 
       - name: Restore
-        run: dotnet restore GAP-SampleCSharpUI.sln
+        run: dotnet restore SampleCSharpUI.sln
 
       - name: Build (Release)
-        run: msbuild GAP-SampleCSharpUI.sln `
+        run: msbuild SampleCSharpUI.sln `
               /p:Configuration=Release `
               /p:Platform="Any CPU" `
               /t:Build

@@ -1,0 +1,67 @@
+name: Release - Upload ZIP
+
+on:
+  push:
+    tags:
+      - 'v*'   # v1.3.0.0 など
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  release:
+    runs-on: windows-2025-vs2026
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+        with:
+          vs-version: '17.0'
+
+      # packages.config 対応
+      - name: NuGet Restore
+        run: nuget restore SampleCSharpUI.sln
+
+      - name: Build (Release)
+        run: msbuild SampleCSharpUI.sln `
+              /p:Configuration=Release `
+              /p:Platform="Any CPU" `
+              /t:Build
+
+      # ZIP 作成（タグ名を使用）
+      - name: Create ZIP
+        run: |
+          Compress-Archive `
+            -Path SampleCSharpUI/bin/Release/* `
+            -DestinationPath SampleCSharpUI-${{ github.ref_name }}.zip
+
+      # Release 作成（タグ名を使用）
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+
+      # ZIP を Release に Upload（ご指定どおり）
+      - name: Upload ZIP to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: SampleCSharpUI-${{ github.ref_name }}.zip
+          asset_name: SampleCSharpUI-${{ github.ref_name }}.zip
+          asset_content_type: application/zip

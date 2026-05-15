@@ -60,7 +60,7 @@
                             <ColumnDefinition Width="61" />
                             <ColumnDefinition Width="61" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="{Binding Name}" />
+                        <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="{Binding Name}" ToolTip="{Binding ID}" />
                         <Button Grid.Column="1" Content="{x:Static prop:Resources.Edit}" HorizontalAlignment="Right" Width="56" FontSize="14" FontWeight="Bold" Background="White" 
                                 Margin="5,0,0,0">
                             <i:Interaction.Triggers>

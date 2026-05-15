@@ -44,13 +44,13 @@ namespace SampleCSharpUI.Models
         /// <summary>
         /// 対象リトリーバ
         /// </summary>
-        private APIData.TRetriever _Retriever = null;
+        private APIData.TRetriever _RetrieverData = null;
         public APIData.TRetriever RetrieverData
         {
-            get { return this._Retriever; }
+            get { return this._RetrieverData; }
             set
             {
-                this._Retriever = value;
+                this._RetrieverData = value;
                 OnPropertyChanged();
             }
         }
@@ -104,12 +104,13 @@ namespace SampleCSharpUI.Models
                 var ser = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(APIData.TRetrievers));
                 {
                     var result = ser.ReadObject(json) as APIData.TRetrievers;
-                    foreach (var item in result.results)
+                    foreach (var item in result.results?.OrderByDescending((x)=> x.created_at))
                     {
                         var retriever = new Models.TDataRetriever()
                         {
                             ID = item.id,
-                            Name = item.name
+                            Name = item.name,
+                            CreateDateTime = DateTimeOffset.FromUnixTimeMilliseconds(item.created_at).ToLocalTime().DateTime,
                         };
                         this.Retrievers.Add(retriever);
                     }

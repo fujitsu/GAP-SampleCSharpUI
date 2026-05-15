@@ -148,6 +148,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Commons\APIData.cs" />
+    <Compile Include="Commons\Base64Helper.cs" />
     <Compile Include="Commons\CryptographyHelper.cs" />
     <Compile Include="Commons\HttpHelper.cs" />
     <Compile Include="Commons\IntRangeValidationRule.cs" />
@@ -159,6 +160,7 @@
     <Compile Include="Converters\Long2LocalDateTimeConverter.cs" />
     <Compile Include="Converters\MarkdownToFlowDocumentConverter.cs" />
     <Compile Include="Converters\NegativeConverter.cs" />
+    <Compile Include="Converters\Null2CollapsedConverter.cs" />
     <Compile Include="Converters\Null2FalseConverter.cs" />
     <Compile Include="Converters\RoleToHorizontalAlignmentConverter.cs" />
     <Compile Include="Converters\WidthPercentageConverter.cs" />

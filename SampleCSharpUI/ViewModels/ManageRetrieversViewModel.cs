@@ -50,6 +50,20 @@ namespace SampleCSharpUI.ViewModels
         }
 
         /// <summary>
+        /// リトリーバーID
+        /// </summary>
+        private string _ID = string.Empty;
+        public string ID
+        {
+            get { return _ID; }
+            set
+            {
+                _ID = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
         /// リトリーバー名
         /// </summary>
         public string RetrieverName
@@ -187,6 +201,7 @@ namespace SampleCSharpUI.ViewModels
         /// <param name="id"></param>
         internal async Task GetEditDataAsync(string id)
         {
+            this.ID = id;   
             await this.Model.GetRetrieverAsync(id);
         }
 
@@ -246,13 +261,13 @@ namespace SampleCSharpUI.ViewModels
                             this.Message = "登録処理中…";
                             if (this.IsUseUrl || this.IsUseFile || this.IsUseFolder)
                             {
-                                var id = await this.Model.CreateRetrieverFromDataAsync(
+                                this.ID = await this.Model.CreateRetrieverFromDataAsync(
                                     this.RetrieverName,
                                     this.IsUseUrl ? new List<string>() { this.Url } : null,
                                     files);
-                                if (!string.IsNullOrEmpty(id))
+                                if (!string.IsNullOrEmpty(this.ID))
                                 {
-                                    var item = this.Model.Retrievers.FirstOrDefault((x) => x.ID == id);
+                                    var item = this.Model.Retrievers.FirstOrDefault((x) => x.ID == this.ID);
                                     if (item != null)
                                     {
                                         this.Model.SelectedRetriever = item;
@@ -304,14 +319,14 @@ namespace SampleCSharpUI.ViewModels
 
                             if (this.IsUseUrl || this.IsUseFile || this.IsUseFolder)
                             {
-                                var id = await this.Model.SetRetrieverFromDataAsync(
+                                this.ID = await this.Model.SetRetrieverFromDataAsync(
                                     this.Model.RetrieverData,
                                     this.RetrieverName,
                                     this.IsUseUrl ? new List<string>() { this.Url } : null,
                                     files);
-                                if (!string.IsNullOrEmpty(id))
+                                if (!string.IsNullOrEmpty(this.ID))
                                 {
-                                    var item = this.Model.Retrievers.FirstOrDefault((x) => x.ID == id);
+                                    var item = this.Model.Retrievers.FirstOrDefault((x) => x.ID == this.ID);
                                     if (item != null)
                                     {
                                         this.Model.SelectedRetriever = item;

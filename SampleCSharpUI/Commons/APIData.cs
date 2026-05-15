@@ -208,5 +208,58 @@ namespace SampleCSharpUI.Commons
             [DataMember]
             public string token { get; set; }
         }
+
+        [DataContract]
+        public class TCohereV2ChatRequest
+        {
+            [DataMember]
+            public string model { get; set; }
+            [DataMember]
+            public TCohereV2ChatMessage[] messages { get; set; }
+            [DataMember]
+            public float temperature { get; set; }
+            [DataMember]
+            public uint max_tokens { get; set; }
+
+        }
+
+        [DataContract]
+        public class TCohereV2ChatMessage
+        {
+            [DataMember]
+            public string role { get; set; }
+            [DataMember]
+            public TContent[] content { get; set; }
+        }
+
+        [DataContract]
+        public class TContent
+        {
+            [DataMember]
+            public string type { get; set; }
+            [DataMember]
+            public string text { get; set; }
+            [DataMember]
+            public TImageUrl image_url { get; set; }
+        }
+
+        [DataContract]
+        public class TImageUrl
+        {
+            [DataMember]
+            public string url { get; set; }
+        }
+
+        [DataContract]
+        public class TCohereV2ChatResponse
+        {
+            [DataMember]
+            public string id { get; set; }
+            [DataMember]
+            public TCohereV2ChatMessage message { get; set; }
+            [DataMember]
+            public string finish_reason { get; set; }
+
+        }
     }
 }

@@ -282,4 +282,22 @@
   <data name="SaveFilter" xml:space="preserve">
     <value>Markdownファイル (*.md)|*.md|すべてのファイル (*.*)|*.*</value>
   </data>
+  <data name="InvalidFileType" xml:space="preserve">
+    <value>選択されたファイルはサポートされていない形式です。</value>
+  </data>
+  <data name="AttachFile" xml:space="preserve">
+    <value>ファイルを添付</value>
+  </data>
+  <data name="AttachFileFilter" xml:space="preserve">
+    <value>画像ファイル (*.png;*.jpeg;*.jpg;*.gif;*.webp)|*.png;*.jpeg;*.jpg;*.gif;*.webp</value>
+  </data>
+  <data name="Attach" xml:space="preserve">
+    <value>＋</value>
+  </data>
+  <data name="Detach" xml:space="preserve">
+    <value>ー</value>
+  </data>
+  <data name="DetachFile" xml:space="preserve">
+    <value>添付を削除</value>
+  </data>
 </root>

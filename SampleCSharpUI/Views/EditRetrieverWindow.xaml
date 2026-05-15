@@ -35,26 +35,29 @@
                 <RowDefinition Height="42" />
                 <RowDefinition Height="42" />
                 <RowDefinition Height="42" />
+                <RowDefinition Height="42" />
             </Grid.RowDefinitions>
-            <Label Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Content="{x:Static prop:Resources.RetrieverName}" VerticalAlignment="Center" />
-            <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding RetrieverName, Mode=TwoWay}" Height="34" VerticalContentAlignment="Center" Margin="0,2,0,2"/>
-            <CheckBox Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Content="{x:Static prop:Resources.SelectUrl}" Grid.ColumnSpan="2"
+            <Label Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Content="ID" VerticalAlignment="Center" />
+            <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding ID, Mode=OneWay}" Height="34" VerticalContentAlignment="Center" Margin="0,2,0,2" IsReadOnly="True" />
+            <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Content="{x:Static prop:Resources.RetrieverName}" VerticalAlignment="Center" />
+            <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding RetrieverName, Mode=TwoWay}" Height="34" VerticalContentAlignment="Center" Margin="0,2,0,2"/>
+            <CheckBox Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Content="{x:Static prop:Resources.SelectUrl}" Grid.ColumnSpan="2"
                       IsChecked="{Binding IsUseUrl, Mode=TwoWay}" />
-            <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding Url, Mode=TwoWay}" Height="34" VerticalContentAlignment="Center" Margin="0,2,0,2"/>
-            <CheckBox Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"
+            <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding Url, Mode=TwoWay}" Height="34" VerticalContentAlignment="Center" Margin="0,2,0,2"/>
+            <CheckBox Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"
                       IsChecked="{Binding IsUseFile, Mode=TwoWay}" />
-            <Button Grid.Row="2" Grid.Column="1" Content="{x:Static prop:Resources.SelectFile}"
+            <Button Grid.Row="3" Grid.Column="1" Content="{x:Static prop:Resources.SelectFile}"
                     VerticalAlignment="Center" Width="88" Height="27" VerticalContentAlignment="Center" HorizontalAlignment="Left" Background="White" Margin="2,0,0,0"
                     Command="{Binding SelectFileCommand}"/>
-            <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding FileName, Mode=OneWay}" Height="34" VerticalContentAlignment="Center" Margin="0,2,0,2" IsReadOnly="True" />
-            <CheckBox Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"
+            <TextBox Grid.Row="3" Grid.Column="2" Text="{Binding FileName, Mode=OneWay}" Height="34" VerticalContentAlignment="Center" Margin="0,2,0,2" IsReadOnly="True" />
+            <CheckBox Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"
                       IsChecked="{Binding IsUseFolder, Mode=TwoWay}" />
-            <Button Grid.Row="3" Grid.Column="1" Content="{x:Static prop:Resources.SelectFolder}"
+            <Button Grid.Row="4" Grid.Column="1" Content="{x:Static prop:Resources.SelectFolder}"
                     VerticalAlignment="Center"  Width="88" Height="27" VerticalContentAlignment="Center" HorizontalAlignment="Left" Background="White" Margin="2,0,0,0"
                     Command="{Binding SelectFolderCommand}"/>
-            <TextBox Grid.Row="3" Grid.Column="2" Text="{Binding FolderName, Mode=OneWay}" Height="34" VerticalContentAlignment="Center" Margin="0,2,0,2" IsReadOnly="True" />
+            <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding FolderName, Mode=OneWay}" Height="34" VerticalContentAlignment="Center" Margin="0,2,0,2" IsReadOnly="True" />
         </Grid>
-        <Grid Grid.Row="4" Margin="4,10,4,4" VerticalAlignment="Center">
+        <Grid Grid.Row="5" Margin="4,10,4,4" VerticalAlignment="Center">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />

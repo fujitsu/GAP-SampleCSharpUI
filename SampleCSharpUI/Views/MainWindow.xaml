@@ -148,40 +148,105 @@
         </Grid>
 
         <Grid VerticalAlignment="Bottom" Grid.Row="4" Background="#FF707070" IsEnabled="{Binding IsLogin, Mode=OneWay}">
-            <Grid  Margin="25,9,25,9">
-                <TextBlock Text="{x:Static prop:Resources.PromptWatermark}"
-                           Padding="5,5,0,5" VerticalAlignment="Top" IsHitTestVisible="False" Background="White">
-                </TextBlock>
-                <TextBox Height="Auto" Padding="0,5,0,5"
-                         Text="{Binding InputText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                         TextWrapping="Wrap" BorderBrush="{Binding Background, RelativeSource={RelativeSource Self}}" 
-                         BorderThickness="0" AcceptsReturn="True" >
-                    <i:Interaction.Triggers>
-                        <i:EventTrigger EventName="PreviewKeyDown">
-                            <i:InvokeCommandAction Command="{Binding PreviewKeyDownCommand}" PassEventArgsToCommand="True" />
-                        </i:EventTrigger>
-                    </i:Interaction.Triggers>
-                    <TextBox.Style>
-                        <Style TargetType="TextBox">
-                            <Setter Property="Background" Value="White"/>
-                            <Setter Property="Opacity" Value="1.0"/>
-                            <Style.Triggers>
-                                <!-- ウォーターマーク表示: 空テキストかつフォーカスが当たっていない場合に表示 -->
-                                <MultiDataTrigger>
-                                    <MultiDataTrigger.Conditions>
-                                        <Condition Binding="{Binding Text, RelativeSource={RelativeSource Self}}" Value=""/>
-                                        <!--<Condition Binding="{Binding IsKeyboardFocused, RelativeSource={RelativeSource Self}}" Value="False"/>-->
-                                    </MultiDataTrigger.Conditions>
-                                    <Setter Property="Opacity" Value="0.5"/>
-                                </MultiDataTrigger>
-                                <!-- Busy表示 -->
-                                <DataTrigger Binding="{Binding IsBusy, Mode=OneWay}" Value="True">
-                                    <Setter Property="Background" Value="LightGray"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBox.Style>
-                </TextBox>
+            <Grid Margin="25,9,25,9">
+                <!-- 入力欄と添付UIを縦に配置（Row: 0=入力欄、1=添付UI） -->
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- 上: テキスト入力（ウォーターマークと重ねる） -->
+                    <Grid Grid.Row="0">
+                        <TextBlock Text="{x:Static prop:Resources.PromptWatermark}"
+                                   Padding="5,5,0,5" VerticalAlignment="Top" IsHitTestVisible="False" Background="White"/>
+                        <TextBox x:Name="textBoxInput" Height="Auto" Padding="0,5,0,5"
+                                 Text="{Binding InputText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 TextWrapping="Wrap" BorderBrush="{Binding Background, RelativeSource={RelativeSource Self}}"
+                                 BorderThickness="0" AcceptsReturn="True" >
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="PreviewKeyDown">
+                                    <i:InvokeCommandAction Command="{Binding PreviewKeyDownCommand}" PassEventArgsToCommand="True" />
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
+                            <TextBox.Style>
+                                <Style TargetType="TextBox">
+                                    <Setter Property="Background" Value="White"/>
+                                    <Setter Property="Opacity" Value="1.0"/>
+                                    <Style.Triggers>
+                                        <!-- ウォーターマーク表示: 空テキストかつフォーカスが当たっていない場合に表示 -->
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding Text, RelativeSource={RelativeSource Self}}" Value=""/>
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="Opacity" Value="0.5"/>
+                                        </MultiDataTrigger>
+                                        <!-- Busy表示 -->
+                                        <DataTrigger Binding="{Binding IsBusy, Mode=OneWay}" Value="True">
+                                            <Setter Property="Background" Value="LightGray"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                    </Grid>
+
+                    <!-- 下: 添付ボタン + ファイル名表示 + 削除ボタン
+                         表示条件: ViewModel の SelectedChatRoom が null のときのみ表示（チャットルームが (none) の場合） -->
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,6,0,0">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <!-- SelectedChatRoom が string.Empty のとき表示 -->
+                                    <DataTrigger Binding="{Binding SelectedChatRoom.ID}" Value="">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+
+                        <Button ToolTip="{x:Static prop:Resources.AttachFile}" Background="#FF707070" Padding="6" Margin="0,0,8,0">
+                            <TextBlock Text="{x:Static prop:Resources.Attach}" Foreground="White" VerticalAlignment="Center"/>
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="Click">
+                                    <i:CallMethodAction TargetObject="{Binding ElementName=window}" MethodName="OpenAttachFile" />
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
+                        </Button>
+
+                        <!-- 添付ファイル名表示（空または null の場合は非表示） -->
+                        <Border Background="White" Padding="6" CornerRadius="4">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding AttachedFileName}" Value="">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding AttachedFileName}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding AttachedFileName}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                <Button ToolTip="{x:Static prop:Resources.DetachFile}" Background="Transparent" Padding="2">
+                                    <TextBlock Text="{x:Static prop:Resources.Detach}" Foreground="Black" FontSize="12" />
+                                    <i:Interaction.Triggers>
+                                        <i:EventTrigger EventName="Click">
+                                            <i:CallMethodAction TargetObject="{Binding ElementName=window}" MethodName="RemoveAttachedFile" />
+                                        </i:EventTrigger>
+                                    </i:Interaction.Triggers>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                        <Image Source="{Binding AttachedFilePath}" HorizontalAlignment="Left"
+                               MaxWidth="50" MaxHeight="50" Stretch="Uniform"  StretchDirection="Both" />
+                    </StackPanel>
+                </Grid>
             </Grid>
         </Grid>
 

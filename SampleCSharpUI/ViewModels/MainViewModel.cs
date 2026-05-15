@@ -114,6 +114,37 @@ namespace SampleCSharpUI.ViewModels
         }
 
         /// <summary>
+        /// 添付ファイル（1ファイルのみ）
+        /// </summary>
+        private string _AttachedFilePath;
+        public string AttachedFilePath
+        {
+            get => _AttachedFilePath;
+            set
+            {
+                if (_AttachedFilePath != value)
+                {
+                    _AttachedFilePath = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private string _AttachedFileName;
+        public string AttachedFileName
+        {
+            get => _AttachedFileName;
+            set
+            {
+                if (_AttachedFileName != value)
+                {
+                    _AttachedFileName = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        /// <summary>
         /// 参照ドキュメント一覧
         /// </summary>
         private List<string> _Refs { get; set; } = new List<string>();
@@ -347,12 +378,17 @@ namespace SampleCSharpUI.ViewModels
                                     
                                     if (!string.IsNullOrEmpty(this.SelectedChatRoom?.ID))
                                     {
-                                        //await this.Model.SendMessageAsync(this.SelectedChatRoom.ID, content);
                                         await this.Model.SendMessageStreamingAsync(this.SelectedChatRoom.ID, content);
+                                    }
+                                    else if (string.IsNullOrEmpty(this.AttachedFilePath))
+                                    {
+                                        await this.Model.SendMessageAsync(this.Messages.ToList(), (float)0.5, 1024, content);
                                     }
                                     else
                                     {
-                                        await this.Model.SendMessageAsync(this.Messages.ToList(), (float)0.5, 1024, content);
+                                        await this.Model.SendMessageWithFileAsync(this.Messages.ToList(), (float)0.5, 1024, content, this.AttachedFilePath);
+                                        this.AttachedFilePath = null;
+                                        this.AttachedFileName = null;
                                     }
                                 }
                                 catch (Exception ex)

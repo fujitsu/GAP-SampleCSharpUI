@@ -5,7 +5,7 @@ using System.Windows.Data;
 
 namespace SampleCSharpUI.Converters
 {
-    internal class Boolean2VisibilityConverter : IValueConverter
+    public class Boolean2VisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

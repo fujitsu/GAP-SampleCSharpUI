@@ -515,7 +515,7 @@ namespace SampleCSharpUI.Models
         /// </summary>
         /// <param name="id">ルームID</param>
         /// <param name="inputText">入力</param>
-        internal async Task SendMessageStreamingAsync(string id, string inputText)
+        internal async Task SendRoomMessageStreamingAsync(string id, string inputText)
         {
             var content = inputText ?? string.Empty;
             if (!string.IsNullOrWhiteSpace(content))
@@ -526,43 +526,56 @@ namespace SampleCSharpUI.Models
                     content = content,
                 };
 
+                // 質問のメッセージ追加
+                this.SetMessage("user", content, DateTime.UtcNow.ToLocalTime(), new List<string>());
+
                 // ここで body を JSON 文字列にシリアライズして変数に格納する
                 using (var ms = new MemoryStream())
                 {
                     var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(APIData.TChatMessage));
                     {
                         serializer.WriteObject(ms, body);
-                        var bodyJsonString = Encoding.UTF8.GetString(ms.ToArray());
-                        var jsonString = await HttpHelper.PostRequestAsync($"/api/v1/chats/{id}/messages", this.IdToken, bodyJsonString);
-                        using (var json = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(jsonString)))
+
+                        // Streaming回答表示完了待ち
+                        while (this.IsStreaming)
                         {
-                            var ser = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(APIData.TChatMessage));
-                            {
-                                // 質問のメッセージ追加
-                                var item = ser.ReadObject(json) as APIData.TChatMessage;
-                                if (item?.role != null)
-                                {
-                                    this.SetMessage(item.role,
-                                        item.content,
-                                        DateTimeOffset.FromUnixTimeMilliseconds(item.timeunix).ToLocalTime().DateTime,
-                                        item.ref_chunks is null ? new List<string>() : item.ref_chunks?.Select((x) => x.text.Replace("\n\n", "\n")).ToList());
-                                }
-                                else
-                                {
-                                    throw new Exception(jsonString);
-                                }
-                            }
-                            json.Close();
-
-                            // 最新行表示
-                            OnPropertyChanged("Messages_Item");
+                            await Task.Delay(100);
                         }
+                        this.IsStreaming = true;
 
-                        // AIからの回答取得
-                        var msgId = this.SetMessage("ai", Resources.Streaming, DateTime.UtcNow.ToLocalTime(), new List<string>());
-                        OnPropertyChanged("Messages_Item");
                         try
                         {
+                            var bodyJsonString = Encoding.UTF8.GetString(ms.ToArray());
+                            var jsonString = await HttpHelper.PostRequestAsync($"/api/v1/chats/{id}/messages", this.IdToken, bodyJsonString);
+                            using (var json = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(jsonString)))
+                            {
+                                var ser = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(APIData.TChatMessage));
+                                {
+                                    // 回答のメッセージ追加
+                                    var item = ser.ReadObject(json) as APIData.TChatMessage;
+                                    if (item?.role != null)
+                                    {
+                                        // 質問は送信できたので回答のStreamingを待ち合わせる
+                                    }
+                                    else
+                                    {
+                                        // ここでLLM-GRでのBlockメッセージが返却される
+                                        this.SetMessage("ai", jsonString, DateTime.UtcNow.ToLocalTime(), new List<string>());
+
+                                        // 待ち合わせ処理をSKIPする
+                                        throw new Exception(jsonString);
+                                    }
+                                }
+                                json.Close();
+
+                                // 最新行表示
+                                OnPropertyChanged("Messages_Item");
+                            }
+
+                            // AIからの回答取得
+                            var msgId = this.SetMessage("ai", Resources.Streaming, DateTime.UtcNow.ToLocalTime(), new List<string>());
+                            OnPropertyChanged("Messages_Item");
+
                             // Stream受信イベントハンドラー登録
                             HttpHelper.StreamEventReceived += async (s, e) =>
                             {
@@ -626,11 +639,11 @@ namespace SampleCSharpUI.Models
                                     }
                                     OnPropertyChanged("Messages_Item");
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
                                     this.IsStreaming = false;
-                                    // エラー発生時はAI回答欄を削除する。
-                                    this.Messages.Remove(this.Messages.Where((x) => x.Id == msgId).FirstOrDefault());
+                                    // エラー発生時はAI回答欄にエラーを表示する（チャットルームの履歴が保持されるので、エラーは一時的なものとして扱う）。
+                                    this.SetMessage(msgId, "ai", ex.Message, DateTime.UtcNow.ToLocalTime(), new List<string>());
 
                                     // エラー伝搬は省略（必要であればイベントを定義して伝搬すること）
                                     //throw ex;
@@ -644,9 +657,9 @@ namespace SampleCSharpUI.Models
                         catch (Exception ex)
                         {
                             this.IsStreaming = false;
-                            // エラー発生時はAI回答欄を削除し、exceptionを投げる
-                            this.Messages.Remove(this.Messages.Where((x) => x.Id == msgId).FirstOrDefault());
-                            throw ex;
+
+                            // エラー伝搬は省略（必要であればイベントを定義して伝搬すること）
+                            //throw ex;
                         }
                     }
                 }
@@ -1002,6 +1015,46 @@ namespace SampleCSharpUI.Models
             }
         }
         #endregion
+
+        /// <summary>
+        /// 入力する
+        /// </summary>
+        /// <param name="content"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        internal async Task SendAsync(string content, string filePath)
+        {
+            if (!string.IsNullOrWhiteSpace(content))
+            {
+                try
+                {
+                    if (!string.IsNullOrEmpty(this.SelectedChatRoom?.ID))
+                    {
+                        await this.SendRoomMessageStreamingAsync(this.SelectedChatRoom.ID, content);
+
+                        // Streaming回答表示完了待ち
+                        while (this.IsStreaming)
+                        {
+                            await Task.Delay(100);
+                        }
+                    }
+                    else if (string.IsNullOrEmpty(filePath))
+                    {
+                        await this.SendMessageAsync(this.Messages.ToList(), (float)0.5, 1024, content);
+                        OnPropertyChanged("IsStreaming");
+                    }
+                    else
+                    {
+                        await this.SendMessageWithFileAsync(this.Messages.ToList(), (float)0.5, 1024, content, filePath);
+                        OnPropertyChanged("IsStreaming");
+                    }
+                }
+                catch
+                {
+                    // 追加失敗時は無視（必要であればログ追加）
+                }
+            }
+        }
+
 
         // プロパティが変更されたときに通知するイベント
         public event PropertyChangedEventHandler PropertyChanged;

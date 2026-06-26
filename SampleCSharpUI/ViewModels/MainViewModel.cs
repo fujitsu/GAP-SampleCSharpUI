@@ -34,7 +34,11 @@ namespace SampleCSharpUI.ViewModels
         public bool IsSettings
         {
             get { return this.Model.IsSettings; }
-            set { OnPropertyChanged(); }
+            set
+            {
+                OnMessaged("Disconnect");
+                OnPropertyChanged();
+            }
         }
 
         /// <summary>
@@ -375,30 +379,15 @@ namespace SampleCSharpUI.ViewModels
                                     // メッセージを追加（ここではローカルに追加するのみ）
                                     var content = this.InputText.Trim();
                                     this.InputText = string.Empty;
-                                    
-                                    if (!string.IsNullOrEmpty(this.SelectedChatRoom?.ID))
-                                    {
-                                        await this.Model.SendMessageStreamingAsync(this.SelectedChatRoom.ID, content);
-                                    }
-                                    else if (string.IsNullOrEmpty(this.AttachedFilePath))
-                                    {
-                                        await this.Model.SendMessageAsync(this.Messages.ToList(), (float)0.5, 1024, content);
-                                    }
-                                    else
-                                    {
-                                        await this.Model.SendMessageWithFileAsync(this.Messages.ToList(), (float)0.5, 1024, content, this.AttachedFilePath);
-                                        this.AttachedFilePath = null;
-                                        this.AttachedFileName = null;
-                                    }
+
+                                    await this.Model.SendAsync(content, this.AttachedFilePath);
+                                    this.AttachedFilePath = null;
+                                    this.AttachedFileName = null;
                                 }
                                 catch (Exception ex)
                                 {
                                     // Command内で例外が発生した場合はここでキャッチしてメッセージ表示
                                     OnMessaged(ex.Message);
-                                }
-                                if (this.Model.IsStreaming == false)
-                                {
-                                    this.EndPreviewKeyDownCommand();
                                 }
                             }
                         }

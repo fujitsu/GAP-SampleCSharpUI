@@ -24,8 +24,15 @@ namespace SampleCSharpUI.Views
                 this.ViewModel.IsBusy = true;
                 try
                 {
-                    // 初期接続
-                    await App.MainVM.ConnectAsync();
+                    if (App.MainVM.IsSettings)
+                    {
+                        // 初期接続
+                        App.MainVM.OnMessaged("Disconnect");
+                    }
+                    else
+                    {
+                        App.MainVM.OnMessaged("Settings");
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -43,6 +50,11 @@ namespace SampleCSharpUI.Views
                 {
                     switch (e.Message)
                     {
+                        case "Login":
+                            {
+                                await App.MainVM.ConnectAsync();
+                            }
+                            break;
                         case "Connect":
                             {
                                 await App.MainVM.ConnectAsync();
@@ -52,6 +64,9 @@ namespace SampleCSharpUI.Views
                         case "Disconnect":
                             {
                                 await App.MainVM.DisconnectAsync();
+
+                                // ログイン画面を表示
+                                this.ShowDialog(new LoginWindow(this) { Owner = this });
                             }
                             break;
 

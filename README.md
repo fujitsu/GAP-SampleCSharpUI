@@ -3,14 +3,17 @@ Fujitsu Cloud Service Genearative AI Platform の API を利用するための C
 実行ファイルはフォルダごとコピーすることでインストール作業なく Windows OS 環境で実行することができます。  
 実行時の .NET Framework は、Windows 10 / 11 付属のものを利用します。
 
+---
 # 使い方
 ## 起動
 1. SampleCSharpUI.exe をクリックして起動
 2. 【初回起動時のみ】  
-自動的にテナント名とクライアントIDを入力する [ 設定 ] 画面を表示するので、利用している Generative AI Platform 環境のテナント名とクライアント ID を入力して [OK] をクリックして保存してください。
-3. 自動的にサインインが始まりますので、利用している EntraID の ID とパスワードを入力してください。
-4. 「 General Use 」というルームがない場合は、自動的にRAGなしでルームを作成します。
-5. 前回利用時のルームの内容を自動的に表示します。初回起動時のみ「 General Use 」ルームが選択されます。
+自動的にテナント名とクライアントIDを入力する [ 設定 ] 画面を表示します。
+   - 利用している Generative AI Platform 環境のテナント名とクライアント ID を入力
+   - [OK] をクリックして保存してください。
+4. [ ログイン ] 画面が表示されるので、[ ログイン ] ボタンをクリックして表示されるブラウザ画面にて、利用している EntraID の ID とパスワードを入力してください。
+5. 「 General Use 」というルームがない場合は、自動的にRAGなしでルームを作成します。
+6. 前回利用時のルームの内容を自動的に表示します。初回起動時のみ「 General Use 」ルームが選択されます。
 - 「 General Use 」ルームは起動時に会話内容が全クリアされる特別なルームです。
 - 他のルームは再起動しても会話内容は維持されます。
 
@@ -130,14 +133,59 @@ RAG自体を削除したり、RAGに格納されているデータを変更し�
 マルチモーダル対応は、Cohere v2 Chat 互換 API (/v2/chat)、または、Cohere OpenAI Chat Completions 互換 API (/compatibility/v1/chat/completions) を呼び出すことで実現可能です。  
 サンプルコードでは、Cohere v2 Chat 互換 API を使用しています。
 
-
 OpenAI 互換 API、または、Cohere V2 Chat 互換 API を呼び出すことで実現可能です。
 
+---
+# サンプルコードの利用 API
+サンプルコードでは、Fujitsu Cloud Service Genearative AI Platform が提供する次の API を使用しています。
+
+## 推論関連
+推論を実現するための API 呼び出しの為のエンドポイントやリクエストボディ、レスポンスボディの解析などは、 MVVM デザインパターンに基づき、 Models\ChatModel.cs に記載しています。
+
+| 操作 |  エンドポイント  |  用途  |
+| ---- | ---- | ---- |
+| GET | /api/v1/chats | チャットルーム一覧取得 |
+| POST | /api/v1/chats | チャットルーム作成 |
+| PUT | /api/v1/chats/{id} | チャットルーム初期設定 |
+| GET | /api/v1/chats/{id}/messages | 会話一覧取得 |
+| PUT | /api/v1/chats/{id}/messages | 会話一覧削除 |
+| POST | /api/v1/chats/{id}/messages | 入力（プロンプト送信） |
+| POST | /api/v1/chats/{id}/messages/createNextAiMessage | LLM から回答受信 |
+| GET | /api/v1/chats/{id} | チャットルーム履歴取得 |
+| POST | /api/v1/action/defined/text:simple_chat/call | チャットルームなし推論 |
+| POST | /api/v1/pass-through/takane/v2/chat | Cohere v2 Chat 互換 API （画像付き入力推論） |
+
+## チャットルーム関連
+チャットルームの作成・更新・削除は、 MVVM デザインパターンに基づき、 Models\ChatRoomModel.cs に記載しています。
+
+| 操作 |  エンドポイント  |  用途  |
+| ---- | ---- | ---- |
+| GET | /api/v1/chats/{id} | チャットルーム設定取得 |
+| PUT | /api/v1/chats/{id} | チャットルーム設定更新 |
+| DELETE | /api/v1/chats/{id} | チャットルーム削除 |
+
+## RAG 関連
+RAG 関連については、 MVVM デザインパターンに基づき、 Models\RetrieverModel.cs に記載しています。
+
+| 操作 |  エンドポイント  |  用途  |
+| ---- | ---- | ---- |
+| GET | /api/v1/retrievers | リトリーバー一覧取得 |
+| PUT | /api/v1/retrievers/{id} | リトリーバー取得 |
+| POST | /api/v1/retrievers | リトリーバー追加 |
+| POST | /api/v1/files/from-url | URL からのファイルアップロード |
+| POST | /api/v1/files | ローカルファイルのアップロード |
+| POST | /api/v1/retrievers/{id}/process/embeddings | RAGデータ作成 |
+| GET | /api/v1/retrievers/{id} | RAGデータ作成完了確認 |
+| DELETE | /api/v1/retrievers/{id} | リトリーバー削除 |
+| DELETE | /api/v1/retrievers/{id} | リトリーバー削除 |
+
+---
 # サンプルコードの build 方法
 サンプルコードは、Visual Studio 2026 または、Visual Studio Code を使用して実行ファイルを build できます。  
 Visual Studio 2026 であれば、SampleCSharpUI.sln を開いていただければ、あとは UI 上で実行や build が可能です。  
 Visual Studio Code の場合は、環境設定などが必要です。
 
+---
 # 最後に
 このサンプルが、Fujitsu Cloud Service Generative AI Platform を活用し、皆様のユーザーエクスペリエンスを飛躍的に進化させる革新的なアプリケーションを生み出すためのインスピレーションとなれば幸いです。  
 さらに、本サンプルではチャットや RAG の管理においても操作性を追求した実装をアプリ側で行っていますので、皆様が開発されるアプリの管理画面設計のヒントとしてぜひご活用ください。

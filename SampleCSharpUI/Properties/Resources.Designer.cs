@@ -304,6 +304,24 @@ namespace SampleCSharpUI.Properties {
         }
         
         /// <summary>
+        ///   ログイン に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Login {
+            get {
+                return ResourceManager.GetString("Login", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   [ログイン]をクリックして、事前に設定した内容で認証を行ってください。 に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string LoginRemarks {
+            get {
+                return ResourceManager.GetString("LoginRemarks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   ルーム管理 に類似しているローカライズされた文字列を検索します。
         /// </summary>
         public static string ManageChatRooms {

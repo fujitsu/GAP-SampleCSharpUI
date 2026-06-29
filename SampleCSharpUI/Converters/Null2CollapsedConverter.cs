@@ -9,7 +9,7 @@ using System.Windows.Data;
 
 namespace SampleCSharpUI.Converters
 {
-    internal class Null2CollapsedConverter : IValueConverter
+    public class Null2CollapsedConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

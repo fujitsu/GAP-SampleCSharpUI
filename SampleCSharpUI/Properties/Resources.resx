@@ -300,4 +300,10 @@
   <data name="DetachFile" xml:space="preserve">
     <value>添付を削除</value>
   </data>
+  <data name="Login" xml:space="preserve">
+    <value>ログイン</value>
+  </data>
+  <data name="LoginRemarks" xml:space="preserve">
+    <value>[ログイン]をクリックして、事前に設定した内容で認証を行ってください。</value>
+  </data>
 </root>

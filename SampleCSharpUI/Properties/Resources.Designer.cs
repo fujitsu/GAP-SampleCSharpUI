@@ -340,6 +340,15 @@ namespace SampleCSharpUI.Properties {
         }
         
         /// <summary>
+        ///   Max_Tokens に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string MaxTokens {
+            get {
+                return ResourceManager.GetString("MaxTokens", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   バージョン情報(_A) に類似しているローカライズされた文字列を検索します。
         /// </summary>
         public static string MenuAbout {
@@ -597,6 +606,15 @@ namespace SampleCSharpUI.Properties {
         public static string Streaming {
             get {
                 return ResourceManager.GetString("Streaming", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   システムプロンプト に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string SystemPrompt {
+            get {
+                return ResourceManager.GetString("SystemPrompt", resourceCulture);
             }
         }
         

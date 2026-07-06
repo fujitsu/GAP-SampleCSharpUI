@@ -83,6 +83,24 @@ namespace SampleCSharpUI.ViewModels
         }
 
         /// <summary>
+        /// 最大トークン
+        /// </summary>
+        public int MaxTokens
+        {
+            get { return this.Model.MaxTokens; }
+            set { this.Model.MaxTokens = value; }
+        }
+
+        /// <summary>
+        /// システムプロンプト
+        /// </summary>
+        public string SystemPrompt
+        {
+            get { return this.Model.SystemPrompt; }
+            set { this.Model.SystemPrompt = value; }
+        }
+
+        /// <summary>
         /// リトリーバー一覧を表すコレクション
         /// </summary>
         public ObservableCollection<Models.TDataRetriever> Retrievers
@@ -184,6 +202,42 @@ namespace SampleCSharpUI.ViewModels
             set
             {
                 _EditRoomCommand = value;
+            }
+        }
+
+        /// <summary>
+        /// 設定保存
+        /// </summary>
+        RelayCommand _SaveCommand;
+        public RelayCommand SaveCommand
+        {
+            get
+            {
+                if (_SaveCommand == null)
+                {
+                    _SaveCommand = new RelayCommand(async () =>
+                    {
+                        this.IsBusy = true;
+                        try
+                        {
+                            await this.Model.SetChatRoomAsync(this.SelectedRetriever.ID);
+                            OnMessaged("");
+                        }
+                        catch (Exception ex)
+                        {
+                            OnMessaged(ex.Message);
+                        }
+                        finally
+                        {
+                            this.IsBusy = false;
+                        }
+                    });
+                }
+                return _SaveCommand;
+            }
+            set
+            {
+                _SaveCommand = value;
             }
         }
 

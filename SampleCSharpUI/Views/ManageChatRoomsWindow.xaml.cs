@@ -37,7 +37,7 @@ namespace SampleCSharpUI.Views
                 this.ViewModel.IsBusy = true;
                 try
                 {
-                    await App.MainVM.GetChatRoomsAsync(true);
+                    await App.MainVM.GetChatRoomsAsync();
                 }
                 catch (Exception ex)
                 {

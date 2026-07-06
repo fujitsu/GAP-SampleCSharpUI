@@ -306,4 +306,10 @@
   <data name="LoginRemarks" xml:space="preserve">
     <value>[ログイン]をクリックして、事前に設定した内容で認証を行ってください。</value>
   </data>
+  <data name="MaxTokens" xml:space="preserve">
+    <value>Max_Tokens</value>
+  </data>
+  <data name="SystemPrompt" xml:space="preserve">
+    <value>システムプロンプト</value>
+  </data>
 </root>

@@ -220,7 +220,8 @@ namespace SampleCSharpUI.Commons
             public float temperature { get; set; }
             [DataMember]
             public uint max_tokens { get; set; }
-
+            [DataMember(EmitDefaultValue = false)]
+            public TDocument[] documents { get; set; }
         }
 
         [DataContract]
@@ -230,6 +231,8 @@ namespace SampleCSharpUI.Commons
             public string role { get; set; }
             [DataMember]
             public TContent[] content { get; set; }
+            [DataMember(EmitDefaultValue = false)]
+            public TCitation[] citations { get; set; }
         }
 
         [DataContract]
@@ -239,15 +242,35 @@ namespace SampleCSharpUI.Commons
             public string type { get; set; }
             [DataMember]
             public string text { get; set; }
-            [DataMember]
+            [DataMember(EmitDefaultValue = false)]
             public TImageUrl image_url { get; set; }
         }
 
         [DataContract]
         public class TImageUrl
         {
-            [DataMember]
+            [DataMember(EmitDefaultValue = false)]
             public string url { get; set; }
+        }
+
+        [DataContract]
+        public class TCitation
+        {
+            [DataMember(EmitDefaultValue = false)]
+            public string text { get; set; }
+            [DataMember(EmitDefaultValue = false)]
+            public TSource[] sources { get; set; }
+        }
+
+        [DataContract]
+        public class TSource
+        {
+            [DataMember(EmitDefaultValue = false)]
+            public string id { get; set; }
+            [DataMember(EmitDefaultValue = false)]
+            public string type { get; set; }
+            [DataMember(EmitDefaultValue = false)]
+            public TData document { get; set; }
         }
 
         [DataContract]
@@ -259,7 +282,101 @@ namespace SampleCSharpUI.Commons
             public TCohereV2ChatMessage message { get; set; }
             [DataMember]
             public string finish_reason { get; set; }
+        }
 
+        [DataContract]
+        public class TDocument
+        {
+            [DataMember(EmitDefaultValue = false)]
+            public TData data { get; set; }
+        }
+
+        [DataContract]
+        public class TData
+        {
+            [DataMember(EmitDefaultValue = false)]
+            public string id { get; set; }
+            [DataMember(EmitDefaultValue = false)]
+            public string title { get; set; }
+            [DataMember(EmitDefaultValue = false)]
+            public string text { get; set; }
+        }
+
+        [DataContract]
+        public class TOpenAIChatRequest
+        {
+            [DataMember]
+            public string model { get; set; }
+            [DataMember]
+            public TOpenAIChatMessage[] messages { get; set; }
+            [DataMember]
+            public float temperature { get; set; }
+            [DataMember]
+            public uint max_tokens { get; set; }
+        }
+        [DataContract]
+        public class TOpenAIChatMessage
+        {
+            [DataMember]
+            public string role { get; set; }
+            [DataMember]
+            public string content { get; set; }
+        }
+
+        [DataContract]
+        public class TOpenAIChatResponse
+        {
+            [DataMember]
+            public string id { get; set; }
+            [DataMember]
+            public TChoice[] choices { get; set; }
+            [DataMember]
+            public int created { get; set; }
+        }
+        [DataContract]
+        public class TChoice
+        {
+            [DataMember]
+            public string finish_reason { get; set; }
+            [DataMember]
+            public int index { get; set; }
+            [DataMember]
+            public TOpenAIChatMessage message { get; set; }
+        }
+
+        [DataContract]
+        public class TRetrieverSearchRequest
+        {
+            [DataMember]
+            public string search_type { get; set; }
+            [DataMember]
+            public string search_text { get; set; }
+            [DataMember]
+            public int limit { get; set; }
+            [DataMember]
+            public TRetrieverFilter filter { get; set; }
+        }
+
+        [DataContract]
+        public class TRetrieverFilter
+        {
+            [DataMember]
+            public TRetrieverFilterQuery retriever_id { get; set; }
+        }
+
+        [DataContract]
+        public class TRetrieverFilterQuery
+        {
+            [DataMember(Name = "in")]
+            public string[] ids { get; set; }
+        }
+
+
+        [DataContract]
+        public class TRetrieverSearchResponse
+        {
+            [DataMember]
+            public TRefChunks[] results { get; set; }
         }
     }
 }

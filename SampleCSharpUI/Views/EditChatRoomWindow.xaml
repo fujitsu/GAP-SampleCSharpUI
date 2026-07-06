@@ -19,6 +19,25 @@
     <Window.Resources>
         <converter:NegativeConverter x:Key="NegativeConverter"/>
         <converter:Long2LocalDateTimeConverter x:Key="Long2LocalDateTimeConverter"/>
+        <converter:StringToGridLengthConverter x:Key="StringToGridLengthConverter"/>
+        <!-- ChatRoom.ID が空文字のときに Collapsed にする汎用スタイル -->
+        <Style x:Key="VisibleWhenChatRoomIdNotEmpty" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Visible"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ChatRoom.ID}" Value="">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <!-- ChatRoom.ID が空文字のときに Visible にする汎用スタイル -->
+        <Style x:Key="VisibleWhenChatRoomIdEmpty" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ChatRoom.ID}" Value="">
+                    <Setter Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
 
     <Grid Margin="6,6,6,6" IsEnabled="{Binding IsBusy,Converter={StaticResource NegativeConverter}}">
@@ -34,48 +53,78 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="42" />
                 <RowDefinition Height="42" />
+                <RowDefinition Height="{Binding DataContext.ChatRoom.ID, ElementName=window, Converter={StaticResource StringToGridLengthConverter}, ConverterParameter=42}" />
+                <RowDefinition Height="{Binding DataContext.ChatRoom.ID, ElementName=window, Converter={StaticResource StringToGridLengthConverter}, ConverterParameter=42}" />
+                <RowDefinition Height="{Binding DataContext.ChatRoom.ID, ElementName=window, Converter={StaticResource StringToGridLengthConverter}, ConverterParameter=42}" />
                 <RowDefinition Height="42" />
                 <RowDefinition Height="42" />
-                <RowDefinition Height="42" />
-                <RowDefinition Height="42" />
+                <RowDefinition Height="{Binding DataContext.ChatRoom.ID, ElementName=window, Converter={StaticResource StringToGridLengthConverter}, ConverterParameter=-42}" />
             </Grid.RowDefinitions>
             <Label Grid.Row="0" Grid.Column="0" Content="{x:Static prop:Resources.ChatRoomName}" VerticalAlignment="Center" />
-            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding ChatRoomName, Mode=TwoWay}" Height="34" VerticalContentAlignment="Center" Margin="0,2,0,2"/>
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding ChatRoomName, Mode=TwoWay}" Height="34" VerticalContentAlignment="Center" Margin="0,4,5,4" Grid.ColumnSpan="2">
+                <TextBox.Style>
+                    <Style TargetType="TextBox">
+                        <Setter Property="IsReadOnly" Value="False"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ChatRoom.ID}" Value="">
+                                <Setter Property="IsReadOnly" Value="True"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBox.Style>
+            </TextBox>
             <Label Grid.Row="1" Grid.Column="0" Content="{x:Static prop:Resources.Temperature}" VerticalAlignment="Center" />
-            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Vertical" Margin="0,2,0,2">
-                <Slider Minimum="0" Maximum="1"
-                        Value="{Binding Temperature, Mode=TwoWay}"
-                        TickFrequency="0.1"
+            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Vertical" Margin="0,2,5,2">
+                <Slider Padding="0,0,25,0"
+                        Minimum="0" Maximum="1" TickFrequency="0.1" SmallChange="0.1" LargeChange="0.1"
+                        Value="{Binding Temperature, Mode=TwoWay}"                        
                         IsSnapToTickEnabled="True"/>
                 <TextBlock Text="{Binding Temperature, StringFormat='{}{0:0.0}'}" HorizontalAlignment="Right" />
             </StackPanel>
-            <Label Grid.Row="2" Grid.Column="0" Content="{x:Static prop:Resources.HistoryTokenBudget}" VerticalAlignment="Center" />
-            <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Vertical" Margin="0,2,0,2">
-                <Slider Minimum="0" Maximum="128000" TickFrequency="1000"
+            <Label Grid.Row="2" Grid.Column="0" Content="{x:Static prop:Resources.HistoryTokenBudget}" VerticalAlignment="Center"
+                   Style="{StaticResource VisibleWhenChatRoomIdNotEmpty}"/>
+            <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Vertical" Margin="0,2,5,2"
+                        Style="{StaticResource VisibleWhenChatRoomIdNotEmpty}">
+                <Slider Padding="0,0,25,0"
+                        Minimum="0" Maximum="128000" TickFrequency="1000" SmallChange="1000" LargeChange="10000"
                         Value="{Binding HistoryTokenBudget, Mode=TwoWay}"
                         IsSnapToTickEnabled="True"/>
                 <TextBlock Text="{Binding HistoryTokenBudget}" HorizontalAlignment="Right" />
             </StackPanel>
-            <Label Grid.Row="3" Grid.Column="0" Content="{x:Static prop:Resources.DocumentTokenBudget}" VerticalAlignment="Center" />
-            <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Vertical" Margin="0,2,0,2">
-                <Slider Minimum="0" Maximum="128000" TickFrequency="1000"
+            <Label Grid.Row="3" Grid.Column="0" Content="{x:Static prop:Resources.DocumentTokenBudget}" VerticalAlignment="Center"
+                   Style="{StaticResource VisibleWhenChatRoomIdNotEmpty}"/>
+            <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Vertical" Margin="0,2,5,2"
+                        Style="{StaticResource VisibleWhenChatRoomIdNotEmpty}">
+                <Slider Padding="0,0,25,0"
+                        Minimum="0" Maximum="128000" TickFrequency="1000" SmallChange="1000" LargeChange="10000"
                         Value="{Binding DocumentTokenBudget, Mode=TwoWay}"
                         IsSnapToTickEnabled="True"/>
                 <TextBlock Text="{Binding DocumentTokenBudget}" HorizontalAlignment="Right" />
             </StackPanel>
-            <Label Grid.Row="4" Grid.Column="0" Content="{x:Static prop:Resources.AnswerTokenBudget}" VerticalAlignment="Center" />
-            <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Vertical" Margin="0,2,0,2">
-                <Slider Minimum="0" Maximum="4096" TickFrequency="128"
+            <Label Grid.Row="4" Grid.Column="0" Content="{x:Static prop:Resources.AnswerTokenBudget}" VerticalAlignment="Center"
+                   Style="{StaticResource VisibleWhenChatRoomIdNotEmpty}"/>
+            <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Vertical" Margin="0,2,5,2"
+                        Style="{StaticResource VisibleWhenChatRoomIdNotEmpty}">
+                <Slider Padding="0,0,25,0"
+                        Minimum="0" Maximum="8192" TickFrequency="128" SmallChange="128" LargeChange="512"
                         Value="{Binding AnswerTokenBudget, Mode=TwoWay}"
                         IsSnapToTickEnabled="True"/>
                 <TextBlock Text="{Binding AnswerTokenBudget}" HorizontalAlignment="Right" />
             </StackPanel>
-            <Label Grid.Row="5" Grid.Column="0" Content="{x:Static prop:Resources.SelectedRetriever}" VerticalAlignment="Center" />
-            <ComboBox Grid.Row="5" Grid.Column="1" Height="34" VerticalContentAlignment="Center"
+            <Label Grid.Row="5" Grid.Column="0" Content="{x:Static prop:Resources.MaxTokens}" VerticalAlignment="Center"/>
+            <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Vertical" Margin="0,2,5,2">
+                <Slider Padding="0,0,25,0"
+                        Minimum="0" Maximum="8192" TickFrequency="128" SmallChange="128" LargeChange="512"
+                        Value="{Binding MaxTokens, Mode=TwoWay}"
+                        IsSnapToTickEnabled="True"/>
+                <TextBlock Text="{Binding MaxTokens}" HorizontalAlignment="Right" />
+            </StackPanel>
+            <Label Grid.Row="6" Grid.Column="0" Content="{x:Static prop:Resources.SelectedRetriever}" VerticalAlignment="Center" />
+            <ComboBox Grid.Row="6" Grid.Column="1" Height="34" VerticalContentAlignment="Center"
                       ItemsSource="{Binding Retrievers}"
                       SelectedItem="{Binding SelectedRetriever, Mode=TwoWay}"
                       SelectedValuePath="ID"
-                      Margin="0,4,0,4">
+                      Margin="0,4,5,4">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
@@ -84,6 +133,11 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
+            <Label Grid.Row="7" Grid.Column="0" Content="{x:Static prop:Resources.SystemPrompt}" VerticalAlignment="Center"
+                   Style="{StaticResource VisibleWhenChatRoomIdEmpty}"/>
+            <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding SystemPrompt, Mode=TwoWay}" MinHeight="34" VerticalContentAlignment="Center" Margin="0,4,5,4" VerticalAlignment="Center"
+                     Style="{StaticResource VisibleWhenChatRoomIdEmpty}">
+            </TextBox>
         </Grid>
         <StackPanel Grid.Row="1" Margin="4,10,4,4" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Margin="0,0,5,0" Content="{x:Static prop:Resources.Save}" Width="88" Height="27"

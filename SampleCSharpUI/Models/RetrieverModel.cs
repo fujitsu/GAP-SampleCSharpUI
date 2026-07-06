@@ -104,7 +104,7 @@ namespace SampleCSharpUI.Models
                 var ser = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(APIData.TRetrievers));
                 {
                     var result = ser.ReadObject(json) as APIData.TRetrievers;
-                    foreach (var item in result.results?.OrderByDescending((x)=> x.created_at))
+                    foreach (var item in result.results?.OrderByDescending((x) => x.created_at))
                     {
                         var retriever = new Models.TDataRetriever()
                         {

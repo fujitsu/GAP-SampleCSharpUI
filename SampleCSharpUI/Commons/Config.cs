@@ -5,12 +5,10 @@ using System.Runtime.Serialization.Json;
 
 namespace SampleCSharpUI.Commons
 {
-    internal class Config
+    internal partial class Config       
     {
         internal static string ClientId { get; set; }
         internal static string TenantName { get; set; }
-        internal static string SelectedChatRoomID { get; set; }
-
         internal static bool IsUseOSWebView { get; set; }
         internal static bool IsPromptAuthentication { get; set; }
         internal static string ClientSecret { get; set; }
@@ -49,7 +47,6 @@ namespace SampleCSharpUI.Commons
 
                             Config.ClientId = recvData.ClientId;
                             Config.TenantName = recvData.TenantName;
-                            Config.SelectedChatRoomID = recvData.SelectedChatRoomID;
                             Config.IsUseOSWebView = recvData.IsUseOSWebView;
                             Config.IsPromptAuthentication = !recvData.IsNotPromptAuthentication;
                             Config.ClientSecret = CryptographyHelper.DecryptStringe(recvData.ClientSecret);
@@ -62,7 +59,6 @@ namespace SampleCSharpUI.Commons
                 {
                     Config.ClientId = string.Empty;
                     Config.TenantName = string.Empty;
-                    Config.SelectedChatRoomID = string.Empty;
                     Config.IsUseOSWebView = false;
                     Config.IsPromptAuthentication = true;
                     Config.ClientSecret = string.Empty;
@@ -113,7 +109,6 @@ namespace SampleCSharpUI.Commons
                     // Loadがはしらないように内部変数から取得する
                     st.ClientId = Config.ClientId;
                     st.TenantName = Config.TenantName;
-                    st.SelectedChatRoomID = Config.SelectedChatRoomID;
                     st.IsUseOSWebView = Config.IsUseOSWebView;
                     st.IsNotPromptAuthentication = !Config.IsPromptAuthentication;
                     st.ClientSecret = CryptographyHelper.EncryptString(Config.ClientSecret);
@@ -147,8 +142,6 @@ namespace SampleCSharpUI.Commons
             public string ClientId { get; set; }
             [DataMember]
             public string TenantName { get; set; }
-            [DataMember]
-            public string SelectedChatRoomID { get; set; }
             [DataMember]
             public bool IsUseOSWebView { get; set; }
             [DataMember]

@@ -110,7 +110,7 @@ namespace SampleCSharpUI.Views
                             {
                                 // 編集画面を表示
                                 var subWindow = new EditChatRoomWindow(this.ViewModel.SelectedChatRoom) { Owner = this };
-                                if (subWindow.ShowDialog() == true)
+                                if (subWindow.ShowDialog() == true && !string.IsNullOrEmpty(App.MainVM.SelectedChatRoom?.ID))
                                 {
                                     // チャットルーム一覧を再取得
                                     await this.ViewModel.GetChatRoomsAsync();

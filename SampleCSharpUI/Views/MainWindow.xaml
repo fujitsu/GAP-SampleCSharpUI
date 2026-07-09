@@ -114,7 +114,6 @@
                             <MultiDataTrigger>
                                 <MultiDataTrigger.Conditions>
                                     <Condition Binding="{Binding IsBusy, Mode=OneWay, Converter={StaticResource NegativeConverter}}" Value="True"/>
-                                    <Condition Binding="{Binding SelectedChatRoom.ID, Mode=OneWay, Converter={StaticResource Null2FalseConverter}}" Value="True"/>
                                 </MultiDataTrigger.Conditions>
                                 <Setter Property="IsEnabled" Value="True"/>
                             </MultiDataTrigger>
@@ -243,8 +242,10 @@
                                 </Button>
                             </StackPanel>
                         </Border>
-                        <Image Source="{Binding AttachedFilePath}" HorizontalAlignment="Left"
-                               MaxWidth="50" MaxHeight="50" Stretch="Uniform"  StretchDirection="Both" />
+                        <Image Source="{Binding AttachedFilePath, TargetNullValue={x:Null}, FallbackValue={x:Null}}"
+                               HorizontalAlignment="Left"
+                               MaxWidth="50" MaxHeight="50"
+                               Stretch="Uniform" StretchDirection="Both" />
                     </StackPanel>
                 </Grid>
             </Grid>
@@ -290,7 +291,7 @@
                                     <MultiDataTrigger.Conditions>
                                         <Condition Binding="{Binding IsLogin, Mode=OneWay}" Value="True"/>
                                         <Condition Binding="{Binding IsBusy, Mode=OneWay, Converter={StaticResource NegativeConverter}}" Value="True"/>
-                                        <Condition Binding="{Binding SelectedChatRoom.ID, Mode=OneWay, Converter={StaticResource Null2FalseConverter}}" Value="True"/>
+                                        <!--<Condition Binding="{Binding SelectedChatRoom.ID, Mode=OneWay, Converter={StaticResource Null2FalseConverter}}" Value="True"/>-->
                                     </MultiDataTrigger.Conditions>
                                     <Setter Property="IsEnabled" Value="True"/>
                                 </MultiDataTrigger>
@@ -309,6 +310,33 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
+                <StackPanel>
+                    <ComboBox Foreground="Black" 
+                              ItemsSource="{Binding APIs}" 
+                              SelectedItem="{Binding SelectedAPI}"
+                              SelectedValuePath="ID"
+                              IsEnabled="{Binding IsLogin}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" ToolTip="{Binding FullName}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsLogin}" Value="True"/>
+                                        <Condition Binding="{Binding SelectedChatRoom.ID}" Value=""/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                </StackPanel>
                 <MenuItem Header="{x:Static prop:Resources.MenuHelp}">
                     <MenuItem Command="{Binding ShowDialogCommand}" CommandParameter="About" Header="{x:Static prop:Resources.MenuAbout}" />
                 </MenuItem>

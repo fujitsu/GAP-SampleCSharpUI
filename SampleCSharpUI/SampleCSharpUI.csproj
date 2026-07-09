@@ -153,6 +153,7 @@
     </ApplicationDefinition>
     <Compile Include="Commons\APIData.cs" />
     <Compile Include="Commons\Base64Helper.cs" />
+    <Compile Include="Commons\ConfigSpecific.cs" />
     <Compile Include="Commons\CryptographyHelper.cs" />
     <Compile Include="Commons\HttpHelper.cs" />
     <Compile Include="Commons\IntRangeValidationRule.cs" />
@@ -167,6 +168,7 @@
     <Compile Include="Converters\Null2CollapsedConverter.cs" />
     <Compile Include="Converters\Null2FalseConverter.cs" />
     <Compile Include="Converters\RoleToHorizontalAlignmentConverter.cs" />
+    <Compile Include="Converters\StringToGridLengthConverter.cs" />
     <Compile Include="Converters\WidthPercentageConverter.cs" />
     <Compile Include="Models\ChatRoomModel.cs" />
     <Compile Include="Models\ChatModel.cs" />

@@ -1,4 +1,5 @@
 ﻿using SampleCSharpUI.Commons;
+using SampleCSharpUI.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -79,6 +80,24 @@ namespace SampleCSharpUI.ViewModels
         }
 
         /// <summary>
+        /// API一覧を表すコレクション。
+        /// </summary>
+        public ObservableCollection<Models.TItem> APIs
+        {
+            get { return this.Model.APIs; }
+            set { this.Model.APIs = value; }
+        }
+
+        /// <summary>
+        /// 利用API
+        /// </summary>
+        public Models.TItem SelectedAPI
+        {
+            get { return this.Model.SelectedAPI; }
+            set { this.Model.SelectedAPI = value; }
+        }
+
+        /// <summary>
         /// Busy表示用
         /// </summary>
         private bool _IsBusy = false;
@@ -134,6 +153,9 @@ namespace SampleCSharpUI.ViewModels
             }
         }
 
+        /// <summary>
+        /// 添付ファイル名（1ファイルのみ）
+        /// </summary>
         private string _AttachedFileName;
         public string AttachedFileName
         {
@@ -147,6 +169,7 @@ namespace SampleCSharpUI.ViewModels
                 }
             }
         }
+
 
         /// <summary>
         /// 参照ドキュメント一覧
@@ -233,7 +256,7 @@ namespace SampleCSharpUI.ViewModels
         /// ルーム一覧取得
         /// </summary>
         /// <returns></returns>
-        internal async Task GetChatRoomsAsync(bool isUseNone = false)
+        internal async Task GetChatRoomsAsync(bool isUseNone = true)
         {
             await this.Model.GetChatRoomsAsync(isUseNone);
         }
@@ -388,6 +411,7 @@ namespace SampleCSharpUI.ViewModels
                                 {
                                     // Command内で例外が発生した場合はここでキャッチしてメッセージ表示
                                     OnMessaged(ex.Message);
+                                    this.IsBusy = false;
                                 }
                             }
                         }

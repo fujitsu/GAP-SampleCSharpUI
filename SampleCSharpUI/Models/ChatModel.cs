@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -13,6 +14,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
+using static SampleCSharpUI.Commons.APIData;
 
 namespace SampleCSharpUI.Models
 {
@@ -135,12 +137,58 @@ namespace SampleCSharpUI.Models
         }
         #endregion
 
+        #region "チャット関連プロパティ"
+        public ObservableCollection<Models.TDataChatRoom> ChatRooms { get; set; } = new ObservableCollection<Models.TDataChatRoom>();
+        public ObservableCollection<TMessage> Messages { get; set; } = new ObservableCollection<TMessage>();
+        public ObservableCollection<TItem> APIs { get; set; } = new ObservableCollection<TItem>()
+        {
+            new TItem { ID = "v2", Name = "Cohere v2", FullName = "Cohere v2 Chat API" },
+            new TItem { ID = "OpenAI", Name = "Cohere OpenAI", FullName = "Cohere OpenAI compatibility Chat API" }
+        };
+
+        private Models.TDataChatRoom _SelectedChatRoom = null;
+        public Models.TDataChatRoom SelectedChatRoom
+        {
+            get { return this._SelectedChatRoom; }
+            set
+            {
+                if (this._SelectedChatRoom != value)
+                {
+                    this._SelectedChatRoom = value;
+                    OnPropertyChanged();
+
+                    // 選択済チャットルームID保存
+                    if (this._SelectedChatRoom != null)
+                    {
+                        Config.SelectedChatRoomID = this._SelectedChatRoom?.ID;
+                        Config.SaveProperties();
+                    }
+                }
+            }
+        }
+
+        private TItem _SelectedAPI = null;
+        public TItem SelectedAPI
+        {
+            get { return _SelectedAPI; }
+            set
+            {
+                if (_SelectedAPI != value)
+                {
+                    _SelectedAPI = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        #endregion
+
         /// <summary>
         /// コンストラクター
         /// </summary>
         public ChatModel()
         {
             this.ExpireTimer.Stop();
+            this.SelectedAPI = this.APIs[0];
 
             // 認証キー期限切れ対応
             this.ExpireTimer.Tick += async (s, e) =>
@@ -176,32 +224,8 @@ namespace SampleCSharpUI.Models
         }
 
         #region "チャット関連"
-        public ObservableCollection<Models.TDataChatRoom> ChatRooms { get; set; } = new ObservableCollection<Models.TDataChatRoom>();
-        public ObservableCollection<TMessage> Messages { get; set; } = new ObservableCollection<TMessage>();
-
-        private Models.TDataChatRoom _SelectedChatRoom = null;
-        public Models.TDataChatRoom SelectedChatRoom
-        {
-            get { return this._SelectedChatRoom; }
-            set
-            {
-                if (this._SelectedChatRoom != value)
-                {
-                    this._SelectedChatRoom = value;
-                    OnPropertyChanged();
-
-                    // 選択済チャットルームID保存
-                    if (this._SelectedChatRoom != null)
-                    {
-                        Config.SelectedChatRoomID = this._SelectedChatRoom?.ID;
-                        Config.SaveProperties();
-                    }
-                }
-            }
-        }
-
         // チャットルーム一覧取得処理
-        internal async Task GetChatRoomsAsync(bool isUseNone = false)
+        internal async Task GetChatRoomsAsync(bool isUseNone = true)
         {
             const string defaultChatRoomName = "General Use";
             var defaultChatRoomID = string.Empty;
@@ -428,11 +452,11 @@ namespace SampleCSharpUI.Models
         }
 
         /// <summary>
-        /// プロンプト入力
+        /// プロンプト入力(チャットルームあり)
         /// </summary>
         /// <param name="id">ルームID</param>
         /// <param name="inputText">入力</param>
-        internal async Task SendMessageAsync(string id, string inputText)
+        internal async Task SendRoomMessageAsync(string id, string inputText)
         {
             var content = inputText ?? string.Empty;
             if (!string.IsNullOrWhiteSpace(content))
@@ -511,7 +535,7 @@ namespace SampleCSharpUI.Models
         }
 
         /// <summary>
-        /// プロンプト入力(Stream受信)
+        /// プロンプト入力(チャットルームあり：Stream受信)
         /// </summary>
         /// <param name="id">ルームID</param>
         /// <param name="inputText">入力</param>
@@ -654,7 +678,7 @@ namespace SampleCSharpUI.Models
                             this.IsStreaming = true;
                             jsonString = await HttpHelper.PostRequestStreamAsync(msgId, $"/api/v1/chats/{id}/messages/createNextAiMessage/streaming", this.IdToken, "{}");
                         }
-                        catch (Exception ex)
+                        catch
                         {
                             this.IsStreaming = false;
 
@@ -690,17 +714,17 @@ namespace SampleCSharpUI.Models
         }
 
         /// <summary>
-        /// プロンプト入力(チャットルームなし)
+        /// プロンプト入力(チャットルームなし:GAP_SimpleChat API)
         /// </summary>
         /// <param name="inputText">入力</param>
-        internal async Task SendMessageAsync(List<TMessage> histories, float temperature, int token, string inputText)
+        internal async Task SendMessageSimpleChatAsync(List<TMessage> histories, float temperature, int token, string inputText, string systemPrompt)
         {
             var content = inputText ?? string.Empty;
             if (!string.IsNullOrWhiteSpace(content))
             {
                 var body = new APIData.TNonRoomRequest()
                 {
-                    messages = this.SetHistories(histories),
+                    messages = this.SetSimpleChatHistories(histories),
                     question = content,
                     model = "cohere.command-r-plus-fujitsu",
                     max_tokens = token,
@@ -756,7 +780,7 @@ namespace SampleCSharpUI.Models
         }
 
         // 履歴設定(チャットルームなし)
-        private APIData.TChatMessage[] SetHistories(List<TMessage> histories)
+        private APIData.TChatMessage[] SetSimpleChatHistories(List<TMessage> histories)
         {
             if (histories == null || histories.Count == 0)
             {
@@ -780,30 +804,7 @@ namespace SampleCSharpUI.Models
             }
         }
 
-        // 履歴設定(チャットルームなし)
-        private APIData.TCohereV2ChatMessage[] SetCohereV2ChatHistories(List<TMessage> histories)
-        {
-            if (histories == null || histories.Count == 0)
-            {
-                return new APIData.TCohereV2ChatMessage[] { };
-            }
-            else
-            {
-                var messages = new APIData.TCohereV2ChatMessage[histories.Count];
-                for (int i = 0; i < histories.Count; i++)
-                {
-                    var history = histories[i];
-                    messages[i] = new APIData.TCohereV2ChatMessage()
-                    {
-                        role = history.Role == "ai" ? "assistant" : "user",
-                        content = new APIData.TContent[] { new APIData.TContent() { type = "text", text = history.Content } },
-                    };
-                }
-                return messages;
-            }
-        }
-
-        // メッセージ追加(チャットルームなし)
+        // メッセージ追加
         private Guid SetMessage(string role, string content, DateTime time, List<string> refs, string image = null)
         {
             var msg = new TMessage()
@@ -818,6 +819,8 @@ namespace SampleCSharpUI.Models
             this.Messages.Add(msg);
             return msg.Id;
         }
+
+        // メッセージ更新
         private Guid SetMessage(Guid id, string role, string content, DateTime time, List<string> refs)
         {
             // 指定された ID を持つ既存メッセージを検索
@@ -840,16 +843,16 @@ namespace SampleCSharpUI.Models
             }
         }
 
-
         /// <summary>
-        /// プロンプト入力(チャットルームなし/マルチモーダル)
+        /// プロンプト入力(チャットルームなし/マルチモーダル:Cohere v2 chat API)
         /// </summary>
         /// <param name="inputText">入力</param>
-        internal async Task SendMessageWithFileAsync(List<TMessage> histories, float temperature, int token, string inputText, string filePath)
+        internal async Task SendMessageCohereV2ChatAsync(List<TMessage> histories, float temperature, int token, string inputText, string systemPrompt, string retrieverID, string filePath)
         {
-            var content = inputText ?? string.Empty;
+            var content = inputText?.Trim() ?? string.Empty;
+            var refs = new List<string>();
             var base64ImageData = !string.IsNullOrEmpty(filePath) ? await Base64Helper.ImageFileToBase64Async(filePath) : string.Empty;
-            if (!string.IsNullOrWhiteSpace(content))
+            if (!string.IsNullOrEmpty(content))
             {
                 var body = new APIData.TCohereV2ChatRequest()
                 {
@@ -859,38 +862,74 @@ namespace SampleCSharpUI.Models
                     max_tokens = (uint)token,
                 };
 
-                // ここで配列の末尾に要素を追加する（body.messages が配列であることを前提）
-                var existing = body.messages ?? new APIData.TCohereV2ChatMessage[] { };
-                var newArr = new APIData.TCohereV2ChatMessage[existing.Length + 1];
-                if (existing.Length > 0)
+                // 既存メッセージをリスト化して末尾に要素を追加する
+                var list = new System.Collections.Generic.List<APIData.TCohereV2ChatMessage>();
+                if (body.messages != null && body.messages.Length > 0)
                 {
-                    Array.Copy(existing, newArr, existing.Length);
+                    list.AddRange(body.messages);
                 }
+
+                // システムプロンプト追加
+                if (!string.IsNullOrEmpty(systemPrompt))
+                {
+                    list.Add(new APIData.TCohereV2ChatMessage()
+                    {
+                        role = "system",
+                        content = new APIData.TContent[] {
+                            new APIData.TContent() { type = "text", text = systemPrompt },
+                        },
+                    });
+                }
+
+                // 参照情報追加（Cohere v2 chat APIでは、参照情報をdocumentsオプションとして設定する）
+                if (!string.IsNullOrEmpty(retrieverID))
+                {
+                    var refChunks = await this.SearchRetrieverAsync(retrieverID, content, 10);
+                    if (refChunks != null && refChunks.Length > 0)
+                    {
+                        // 参照情報をリストに追加
+                        refs.AddRange(refChunks?.Select(chunk => (chunk?.text?.Replace("\n\n", "\n") as string) ?? string.Empty) ?? Enumerable.Empty<string>());
+
+                        // documentsオプションに参照情報を設定
+                        body.documents = refChunks?.Select(refChunk => new APIData.TDocument
+                        {
+                            data = new APIData.TData
+                            {
+                                id = Guid.NewGuid().ToString(),
+                                title = string.Empty,
+                                text = refChunk?.text?.Replace("\n\n", "\n") ?? string.Empty,
+                            }
+                        }).ToArray();
+                    }
+                }
+
+                // 入力プロンプト追加
                 if (!string.IsNullOrEmpty(base64ImageData))
                 {
-                    newArr[newArr.Length - 1] = new APIData.TCohereV2ChatMessage()
+                    list.Add(new APIData.TCohereV2ChatMessage()
                     {
                         role = "user",
                         content = new APIData.TContent[] {
-                            new APIData.TContent() { type = "text", text = inputText },
+                            new APIData.TContent() { type = "text", text = content },
                             new APIData.TContent() { type = "image_url", image_url = new APIData.TImageUrl() { url= $"data:image/png;base64,{base64ImageData}" } }
                         },
-                    };
+                    });
                 }
                 else
                 {
-                    newArr[newArr.Length - 1] = new APIData.TCohereV2ChatMessage()
+                    list.Add(new APIData.TCohereV2ChatMessage()
                     {
                         role = "user",
                         content = new APIData.TContent[] {
-                            new APIData.TContent() { type = "text", text = inputText },
+                            new APIData.TContent() { type = "text", text = content },
                         },
-                    };
+                    });
                 }
-                body.messages = newArr;
 
-                // 質問のメッセージ追加
-                this.SetMessage("user", content, DateTime.UtcNow.ToLocalTime(), new List<string>(), filePath);
+                body.messages = list.ToArray();
+
+                // 質問のメッセージ追加(参照情報は表示しない)
+                this.SetMessage("user", inputText, DateTime.UtcNow.ToLocalTime(), new List<string>(), filePath);
 
                 // ここで body を JSON 文字列にシリアライズして変数に格納する
                 using (var ms = new MemoryStream())
@@ -912,7 +951,155 @@ namespace SampleCSharpUI.Models
                                     var item = ser.ReadObject(json) as APIData.TCohereV2ChatResponse;
                                     if (item?.id != null)
                                     {
-                                        this.SetMessage(msgId, "ai", item.message.content[0].text, DateTime.UtcNow.ToLocalTime(), new List<string>());
+                                        if (item.message?.citations != null)
+                                        {
+                                            // 参照情報がある場合は、回答のメッセージに参照情報を追加する
+                                            foreach (var refItem in item.message?.citations)
+                                            {
+                                                Debug.WriteLine($"{refItem.text} in {string.Join(",", refItem.sources.Select((x) => x?.id).Where(id => !string.IsNullOrEmpty(id)))}");
+                                            }
+                                        }
+                                        this.SetMessage(msgId, "ai", item.message.content[0].text, DateTime.UtcNow.ToLocalTime(), refs);
+                                    }
+                                    else
+                                    {
+                                        throw new Exception(jsonString);
+                                    }
+                                }
+                                json.Close();
+
+                                // 最新行表示
+                                OnPropertyChanged("Messages_Item");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // エラー発生時はAI回答欄を削除し、exceptionを投げる
+                            this.Messages.Remove(this.Messages.Where((x) => x.Id == msgId).FirstOrDefault());
+                            throw ex;
+                        }
+                    }
+                }
+            }
+        }
+        private APIData.TCohereV2ChatMessage[] SetCohereV2ChatHistories(List<TMessage> histories)
+        {
+            if (histories == null || histories.Count == 0)
+            {
+                return new APIData.TCohereV2ChatMessage[] { };
+            }
+            else
+            {
+                var messages = new APIData.TCohereV2ChatMessage[histories.Count];
+                for (int i = 0; i < histories.Count; i++)
+                {
+                    var history = histories[i];
+                    messages[i] = new APIData.TCohereV2ChatMessage()
+                    {
+                        role = history.Role == "ai" ? "assistant" : "user",
+                        content = new APIData.TContent[] { new APIData.TContent() { type = "text", text = history.Content } },
+                    };
+                }
+                return messages;
+            }
+        }
+
+        /// <summary>
+        /// プロンプト入力(チャットルームなし/マルチモーダル:Cohere OpenAI 互換 API)
+        /// </summary>
+        /// <param name="inputText">入力</param>
+        internal async Task SendMessageOpenAIChatAsync(List<TMessage> histories, float temperature, int token, string inputText, string systemPrompt, string retrieverID, string filePath)
+        {
+            var content = inputText?.Trim() ?? string.Empty;
+            var refs = new List<string>();
+            var base64ImageData = !string.IsNullOrEmpty(filePath) ? await Base64Helper.ImageFileToBase64Async(filePath) : string.Empty;
+            if (!string.IsNullOrEmpty(content))
+            {
+                var body = new APIData.TCohereV2ChatRequest()
+                {
+                    model = "takane",
+                    messages = this.SetCohereV2ChatHistories(histories),
+                    temperature = temperature,
+                    max_tokens = (uint)token,
+                };
+
+                // 既存メッセージをリスト化して末尾に要素を追加する
+                var list = new System.Collections.Generic.List<APIData.TCohereV2ChatMessage>();
+                if (body.messages != null && body.messages.Length > 0)
+                {
+                    list.AddRange(body.messages);
+                }
+
+                // システムプロンプト追加
+                if (!string.IsNullOrEmpty(systemPrompt))
+                {
+                    list.Add(new APIData.TCohereV2ChatMessage()
+                    {
+                        role = "system",
+                        content = new APIData.TContent[] { new APIData.TContent() { type = "text", text = systemPrompt } },
+                    });
+                }
+
+                // 参照情報追加 (OpenAI 互換 API では、参照情報を質問文に組み込む)  
+                if (!string.IsNullOrEmpty(retrieverID))
+                {
+                    var refChunks = await this.SearchRetrieverAsync(retrieverID, content, 10);
+                    if (refChunks != null && refChunks.Length > 0)
+                    {
+                        refs.AddRange(refChunks?.Select(chunk => (chunk?.text.Replace("\n\n", "\n") as string) ?? string.Empty) ?? Enumerable.Empty<string>());
+                        content = $"{string.Join("\n", refs)}\n\nQuestion:{content}";
+                    }
+                }
+
+                // 入力プロンプト追加
+                if (!string.IsNullOrEmpty(base64ImageData))
+                {
+                    list.Add(new APIData.TCohereV2ChatMessage()
+                    {
+                        role = "user",
+                        content = new APIData.TContent[] {
+                            new APIData.TContent() { type = "text", text = content },
+                            new APIData.TContent() { type = "image_url", image_url = new APIData.TImageUrl() { url= $"data:image/png;base64,{base64ImageData}" } }
+                        },
+                    });
+                }
+                else
+                {
+                    list.Add(new APIData.TCohereV2ChatMessage()
+                    {
+                        role = "user",
+                        content = new APIData.TContent[] {
+                            new APIData.TContent() { type = "text", text = content },
+                        },
+                    });
+                }
+
+                body.messages = list.ToArray();
+
+                // 質問のメッセージ追加(参照情報は表示しない)
+                this.SetMessage("user", inputText, DateTime.UtcNow.ToLocalTime(), new List<string>(), filePath);
+
+                // ここで body を JSON 文字列にシリアライズして変数に格納する
+                using (var ms = new MemoryStream())
+                {
+                    var msgId = this.SetMessage("ai", Resources.Streaming, DateTime.UtcNow.ToLocalTime(), new List<string>());
+                    OnPropertyChanged("Messages_Item");
+                    var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(APIData.TCohereV2ChatRequest));
+                    {
+                        serializer.WriteObject(ms, body);
+                        try
+                        {
+                            var bodyJsonString = Encoding.UTF8.GetString(ms.ToArray());
+                            var jsonString = await HttpHelper.PostRequestAsync($"/api/v1/pass-through/takane/compatibility/v1/chat/completions", this.IdToken, bodyJsonString);
+                            using (var json = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(jsonString)))
+                            {
+                                var ser = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(APIData.TOpenAIChatResponse));
+                                {
+                                    // 回答のメッセージ追加
+                                    var item = ser.ReadObject(json) as APIData.TOpenAIChatResponse;
+                                    if (item?.id != null)
+                                    {
+                                        this.SetMessage(msgId, "ai", item.choices[0].message.content, DateTime.UtcNow.ToLocalTime(), refs);
                                     }
                                     else
                                     {
@@ -936,6 +1123,48 @@ namespace SampleCSharpUI.Models
             }
         }
 
+        /// <summary>
+        /// リトリーバー検索
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="content"></param>
+        /// <param name="limit"></param>
+        /// <returns></returns>
+        internal async Task<TRefChunks[]> SearchRetrieverAsync(string id, string content, int limit = 10)
+        {
+            TRefChunks[] refChunks = null;
+            var body = new TRetrieverSearchRequest()
+            {
+                search_type = "similarity_search",
+                search_text = content,
+                limit = limit,
+                filter = new TRetrieverFilter()
+                {
+                    retriever_id = new TRetrieverFilterQuery() { ids = new string[] { id } }
+                }
+            };
+
+            // ここで body を JSON 文字列にシリアライズして変数に格納する
+            using (var ms = new MemoryStream())
+            {
+                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(TRetrieverSearchRequest));
+                {
+                    serializer.WriteObject(ms, body);
+                    var bodyJsonString = Encoding.UTF8.GetString(ms.ToArray());
+                    var jsonString = await HttpHelper.PostRequestAsync("/api/v1/retrievers/search", this.IdToken, bodyJsonString);
+                    using (var json = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(jsonString)))
+                    {
+                        var ser = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(TRetrieverSearchResponse));
+                        {
+                            var result = ser.ReadObject(json) as TRetrieverSearchResponse;
+                            refChunks = result?.results ?? new TRefChunks[0];
+                            json.Close();
+                        }
+                    }
+                }
+            }
+            return refChunks;
+        }
 
         /// <summary>
         /// 最新の入力プロンプトまでを削除する（AIからの回答がある場合は、その回答まで削除する
@@ -1037,20 +1266,28 @@ namespace SampleCSharpUI.Models
                             await Task.Delay(100);
                         }
                     }
-                    else if (string.IsNullOrEmpty(filePath))
+                    else if (string.IsNullOrEmpty(filePath) && string.IsNullOrEmpty(Config.RetrieverID))
                     {
-                        await this.SendMessageAsync(this.Messages.ToList(), (float)0.5, 1024, content);
+                        await this.SendMessageSimpleChatAsync(this.Messages.ToList(), Config.Temperature, Config.MaxTokens, content, Config.SystemPrompt);
                         OnPropertyChanged("IsStreaming");
                     }
                     else
                     {
-                        await this.SendMessageWithFileAsync(this.Messages.ToList(), (float)0.5, 1024, content, filePath);
+                        if (this.SelectedAPI?.ID == "v2")
+                        {
+                            await this.SendMessageCohereV2ChatAsync(this.Messages.ToList(), Config.Temperature, Config.MaxTokens, content, Config.SystemPrompt, Config.RetrieverID, filePath);
+                        }
+                        else
+                        {
+                            await this.SendMessageOpenAIChatAsync(this.Messages.ToList(), Config.Temperature, Config.MaxTokens, content, Config.SystemPrompt, Config.RetrieverID, filePath);
+
+                        }
                         OnPropertyChanged("IsStreaming");
                     }
                 }
                 catch
                 {
-                    // 追加失敗時は無視（必要であればログ追加）
+                    throw;
                 }
             }
         }
@@ -1090,5 +1327,12 @@ namespace SampleCSharpUI.Models
         public string EmbeddingModel { get; set; } = string.Empty;
         public string[] OriginIDs { get; set; } = null;
         public DateTime CreateDateTime { get; set; } = DateTime.Now;
+    }
+
+    public class TItem
+    {
+        public string ID { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
     }
 }

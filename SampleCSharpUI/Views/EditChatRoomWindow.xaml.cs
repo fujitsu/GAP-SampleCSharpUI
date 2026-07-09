@@ -16,12 +16,19 @@ namespace SampleCSharpUI.Views
         {
             InitializeComponent();
 
+            var rootElement = this.Content as FrameworkElement;
+            if (rootElement != null)
+            {
+                rootElement.Visibility = Visibility.Hidden;
+            }
+
             this.Loaded += async (s, e) =>
             {
                 this.ViewModel.IsBusy = true;
                 try
                 {
                     // 初期値設定
+                    this.ViewModel.ChatRoom = room;
                     await this.ViewModel.GetEditDataAsync(room?.ID);
                 }
                 catch (Exception ex)
@@ -29,7 +36,11 @@ namespace SampleCSharpUI.Views
                     // ViewModelの処理で例外が発生した場合はここでキャッチしてメッセージ表示
                     MessageBox.Show(this.Owner, ex.Message, this.Title, MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 }
-                this.ViewModel.IsBusy = false;
+                finally
+                {
+                    rootElement.Visibility = Visibility.Visible;
+                    this.ViewModel.IsBusy = false;
+                }
             };
 
             this.ViewModel.Messaged += (s, e) =>
@@ -41,7 +52,7 @@ namespace SampleCSharpUI.Views
                     {
                         this.DialogResult = true;
                     }
-                    catch (Exception ex)
+                    catch
                     {
                         this.Close();
                     }
